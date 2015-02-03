@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0201
 """
 @name:              GDWCalc.py
 @vers:              1.5
@@ -26,6 +27,8 @@ import wx
 # Defined by SEMI M1-0302
 __version__ = "1.5.1"
 __released__ = "2015-01-27"
+# TODO: Recode maxGDW to to include 'print' statements?
+# TODO: add "Save" button which outputs data
 
 
 INSTRUCTION_TEXT = """
@@ -118,6 +121,7 @@ class MainFrame(wx.Frame):
         self.Close(True)
 
     def on_calc(self, event):
+        """ Action for Calc event """
         self.panel.calc_gdw(event)
 
 
@@ -127,8 +131,8 @@ class MainPanel(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.parent = parent
 
-        probeList, self.center_xy = gdw.maxGDW((5, 5), 150, 5, 5)
-        self.coord_list = [(i[0], i[1], i[4]) for i in probeList]
+        probe_list, self.center_xy = gdw.maxGDW((5, 5), 150, 5, 5)
+        self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         self.wafer_info = wm_info.WaferInfo((5, 5), self.center_xy)
 
@@ -206,11 +210,11 @@ class MainPanel(wx.Panel):
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.fgs_inputs = wx.FlexGridSizer(rows=5, cols=2)
         self.fgs_inputs.AddMany([self.x_lbl, self.x_input,
-                                self.y_lbl, self.y_input,
-                                self.dia_lbl, self.dia_input,
-                                self.ee_lbl, self.ee_input,
-                                self.fe_lbl, self.fe_input,
-                                ])
+                                 self.y_lbl, self.y_input,
+                                 self.dia_lbl, self.dia_input,
+                                 self.ee_lbl, self.ee_input,
+                                 self.fe_lbl, self.fe_input,
+                                 ])
 
         self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, hgap=10)
 
@@ -251,12 +255,12 @@ class MainPanel(wx.Panel):
         self.ee = float(self.ee_input.Value)
         self.fe = float(self.fe_input.Value)
 
-        probeList, self.center_xy = gdw.maxGDW(self.die_xy,
-                                               self.dia,
-                                               self.ee,
-                                               self.fe,
-                                               )
-        self.coord_list = [(i[0], i[1], i[4]) for i in probeList]
+        probe_list, self.center_xy = gdw.maxGDW(self.die_xy,
+                                                self.dia,
+                                                self.ee,
+                                                self.fe,
+                                                )
+        self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         # Calculate the Die Counts
         # TODO: Update gdw.maxGDW to return these values instead
@@ -305,7 +309,6 @@ class MainPanel(wx.Panel):
         self.flat_loss_result.SetLabel(str(self.flat_loss))
         self.fe_loss_result.SetLabel(str(self.fe_loss))
 
-        # FIXME: Offsets are wrong
         self.x_offset = self.center_xy[0] % 1
         if self.x_offset == 0:
             self.x_offset = "0 (odd)".format(self.x_offset)
@@ -324,36 +327,8 @@ class MainPanel(wx.Panel):
         self.center_y_result.SetLabel(str(self.center_xy[1]))
 
 
-
-# TODO: Recode maxGDW to to include 'print' statements?
-# TODO: get working
-# TODO: Add summary display: GDW, # lost, center
-# TODO: add "Save" button which outputs data
-# TODO: add Center Grid Coord display
-
-
-#def printHeader():
-#    print()
-#    print("++++++++++++++++++++++++++++++")
-#    print("GDWCalc v%s" % __version__)
-#    print("Released %s" % __released__)
-#    print("++++++++++++++++++++++++++++++")
-#    print("")
-
-
 def main():
-#    printHeader()
-#    die_xy, dia, excl, fss = prompts.wafer_info()
-#    print("")
-#
-#    probeList, center_xy = gdw.maxGDW(die_xy, dia, excl, fss)
-#
-#    if prompts.plot():
-#        coord_list = [(i[0], i[1], i[4])
-#                      for i in probeList]
-#        gdw.plotGDW(coord_list, die_xy, dia, excl, fss, center_xy)
-#
-#    raw_input("Press Enter to close this window.")
+    """ Main Code """
     MainApp()
 
 
