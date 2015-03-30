@@ -161,6 +161,13 @@ class MainPanel(wx.Panel):
         self.fe_lbl = wx.StaticText(self, label="Flat Exclusion (mm)")
         self.fe_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
 
+        # Fixed Offsets
+        self.fo_chk = wx.CheckBox(self, label="Fixed Offsets")
+        self.x_fo_lbl = wx.StaticText(self, label="X Offset (mm)")
+        self.x_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+        self.y_fo_lbl = wx.StaticText(self, label="Y Offset (mm)")
+        self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
         self.Bind(wx.EVT_BUTTON, self.calc_gdw, self.calc_button)
@@ -170,6 +177,7 @@ class MainPanel(wx.Panel):
                                                self.coord_list,
                                                self.wafer_info,
                                                data_type='discrete',
+                                               plot_die_centers=True,
                                                )
 
         # Result Info
@@ -208,16 +216,20 @@ class MainPanel(wx.Panel):
         # Set the Layout
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.fgs_inputs = wx.FlexGridSizer(rows=5, cols=2)
+        self.fgs_inputs = wx.FlexGridSizer(rows=8, cols=2)
         self.fgs_inputs.AddMany([self.x_lbl, self.x_input,
                                  self.y_lbl, self.y_input,
                                  self.dia_lbl, self.dia_input,
                                  self.ee_lbl, self.ee_input,
                                  self.fe_lbl, self.fe_input,
+                                 self.fo_chk, (-1, -1),
+                                 self.x_fo_lbl, self.x_fo_input,
+                                 self.y_fo_lbl, self.y_fo_input,
                                  ])
 
         self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, hgap=10)
 
+        # Add items to the results layout
         self.fgs_results.AddMany([self.gdw_lbl, self.gdw_result,
                                   (-1, 10), (-1, 10),
                                   self.ee_loss_lbl, self.ee_loss_result,
@@ -254,12 +266,26 @@ class MainPanel(wx.Panel):
         self.dia = int(self.dia_input.Value)
         self.ee = float(self.ee_input.Value)
         self.fe = float(self.fe_input.Value)
+        self.fo_bool = bool(self.fo_chk.Value)
+        self.x_fo = float(self.x_fo_input.Value)
+        self.y_fo = float(self.y_fo_input.Value)
+        self.fo = (self.x_fo, self.y_fo)
 
-        probe_list, self.center_xy = gdw.maxGDW(self.die_xy,
-                                                self.dia,
-                                                self.ee,
-                                                self.fe,
-                                                )
+        # If using fixed offsets, call other function.
+        if self.fo_bool:
+            probe_list, self.center_xy = gdw.gdw_fo(self.die_xy,
+                                                    self.dia,
+                                                    self.fo,
+                                                    self.ee,
+                                                    self.fe,
+                                                    )
+
+        else:
+            probe_list, self.center_xy = gdw.maxGDW(self.die_xy,
+                                                    self.dia,
+                                                    self.ee,
+                                                    self.fe,
+                                                    )
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         # Calculate the Die Counts
@@ -298,6 +324,7 @@ class MainPanel(wx.Panel):
         self.wafer_map.xyd_dict = self.wafer_map.xyd_to_dict(self.coord_list)
         self.wafer_map._create_legend()
         self.wafer_map.draw_die()
+        self.wafer_map.draw_die_center()
         self.wafer_map.draw_wafer_objects()
         self.wafer_map.zoom_fill()
 
