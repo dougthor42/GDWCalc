@@ -1,0 +1,21 @@
+Doug, follow these instructions to build a new version for Windows Standalone:
+
+1. Update version info in:
+	README.rst
+		Changelog
+	setup.py
+		script=
+		targetName=
+		version=
+	build.py
+		CALL_STR
+		folder
+	build.bat
+		line 3
+		line 4
+
+2. In windows CMD prompt, run build.bat.
+	files will be put in dist\<newvers> folder
+
+3. (optional) Run "python bundle.py "dist\<newvers>"
+	This bundles the app into a .zip for easy emailing.

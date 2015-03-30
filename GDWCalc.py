@@ -59,7 +59,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,
                           None,
-                          title="GDWCalc v1.5.2",
+                          title="GDWCalc v1.5.3",
                           size=(1000, 700),
                           )
         self.init_ui()
@@ -173,11 +173,18 @@ class MainPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.calc_gdw, self.calc_button)
 
         # Actual Wafer Map
+        legend_values = [
+                         "flat",
+                         "excl",
+                         "probe",
+                         "flatExcl",
+                         ]
         self.wafer_map = wm_core.WaferMapPanel(self,
                                                self.coord_list,
                                                self.wafer_info,
                                                data_type='discrete',
                                                plot_die_centers=True,
+                                               discrete_legend_values=legend_values
                                                )
 
         # Result Info
