@@ -173,8 +173,7 @@ class MainPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.calc_gdw, self.calc_button)
 
         # Actual Wafer Map
-        legend_values = [
-                         "flat",
+        legend_values = ["flat",
                          "excl",
                          "probe",
                          "flatExcl",
