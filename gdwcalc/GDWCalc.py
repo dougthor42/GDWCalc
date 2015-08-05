@@ -2,10 +2,8 @@
 # pylint: disable=W0201
 """
 @name:              GDWCalc.py
-@vers:              1.5
 @author:            Douglas Thor
 @created:           2013-04-19
-@modified:          2015-01-27
 @descr:             Calcualtes Gross Die per Wafer (GDW), accounting for
                     wafer flat, edge exclusion, and front-side-scribe (FSS)
                     exclusion (also called flat exclusion).
@@ -16,21 +14,45 @@
                     well as where die were lost (edge, flat, FSS)
 
 """
-
+# ---------------------------------------------------------------------------
+### Imports
+# ---------------------------------------------------------------------------
+# Standard Library
 from __future__ import print_function
+import wx
+
+# Third Party
 import douglib.gdw as gdw
 import wafer_map.wm_core as wm_core
 import wafer_map.wm_info as wm_info
-import wx
+
+# Package / Application
+try:
+    # Imports used for unittests
+#    from . import sibling_module
+    from .__init__ import (__version__,
+                           __released__,
+                           )
+except (SystemError, ValueError):
+    try:
+        # Imports used by Spyder
+#        import sibling_module
+        from __init__ import (__version__,
+                              __released__,
+                              )
+    except ImportError:
+         # Imports used by cx_freeze
+#        from package import sibling_module
+        from gdwcalc import (__version__,
+                             __released__,
+                             )
 
 
-# Defined by SEMI M1-0302
-__version__ = "1.5.1"
-__released__ = "2015-01-27"
 # TODO: Recode maxGDW to to include 'print' statements?
 # TODO: add "Save" button which outputs data
 
-
+TITLE_TEXT = "GDWCalc v{}   Releasaed {}".format(__version__,
+                                                 __released__)
 INSTRUCTION_TEXT = """
 Keyboard Shortcuts:
 Enter\tCalculate GDW
@@ -38,7 +60,7 @@ Home\tZoom to fit
 C\tToggle centerlines
 O\tToggle wafer outline
 L\tToggle legend
-CTRL+C\tExit
+CTRL+Q\tExit
 
 Click on wafer map to
 zoom (mouse wheel) and
@@ -59,7 +81,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,
                           None,
-                          title="GDWCalc v1.5.3",
+                          title=TITLE_TEXT,
                           size=(1000, 700),
                           )
         self.init_ui()
