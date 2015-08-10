@@ -30,9 +30,9 @@ import wafer_map.wm_info as wm_info
 try:
     # Imports used for unittests
 #    from . import sibling_module
-    from .__init__ import (__version__,
-                           __released__,
-                           )
+    from . import (__version__,
+                   __released__,
+                   )
 except (SystemError, ValueError):
     try:
         # Imports used by Spyder
