@@ -436,7 +436,7 @@ Software\\LabView\\OWT\\masks", mask_name + ".ini")
         probe_list[_i] = tuple(probe_list[_i])
 
     n_rc = (max({i[1] for i in probe_list}) + 1,
-           max({i[0] for i in probe_list}) + 1)
+            max({i[0] for i in probe_list}) + 1)
     print("n_rc = {}".format(n_rc))
 
     # create a list of every die
