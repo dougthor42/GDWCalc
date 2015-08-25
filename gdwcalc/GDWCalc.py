@@ -20,6 +20,7 @@
 # Standard Library
 from __future__ import print_function
 import wx
+import os
 
 # Third Party
 import douglib.gdw as gdw
@@ -49,7 +50,6 @@ except (SystemError, ValueError):
 
 
 # TODO: Recode maxGDW to to include 'print' statements?
-# TODO: add "Save" button which outputs data
 
 TITLE_TEXT = "GDWCalc v{}   Releasaed {}".format(__version__,
                                                  __released__)
@@ -82,7 +82,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self,
                           None,
                           title=TITLE_TEXT,
-                          size=(1000, 700),
+                          size=(1000, 720),
                           )
         self.init_ui()
 
@@ -144,7 +144,7 @@ class MainFrame(wx.Frame):
 
     def on_calc(self, event):
         """ Action for Calc event """
-        self.panel.calc_gdw(event)
+        self.panel.on_calc_gdw(event)
 
 
 class MainPanel(wx.Panel):
@@ -157,6 +157,8 @@ class MainPanel(wx.Panel):
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         self.wafer_info = wm_info.WaferInfo((5, 5), self.center_xy)
+        self.die_xy = self.wafer_info.die_size
+        self.dia = self.wafer_info.dia
 
         self.init_ui()
 
@@ -192,7 +194,10 @@ class MainPanel(wx.Panel):
 
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
-        self.Bind(wx.EVT_BUTTON, self.calc_gdw, self.calc_button)
+        self.Bind(wx.EVT_BUTTON, self.on_calc_gdw, self.calc_button)
+
+        self.gen_mask_button = wx.Button(self, label="Generate Mask File")
+        self.Bind(wx.EVT_BUTTON, self.on_gen_mask, self.gen_mask_button)
 
         # Actual Wafer Map
         legend_values = ["flat",
@@ -273,9 +278,11 @@ class MainPanel(wx.Panel):
                                   self.center_y_lbl, self.center_y_result,
                                   ])
         self.vbox.Add(self.fgs_inputs, 0, wx.EXPAND)
-        self.vbox.Add((-1, 20), 0, wx.EXPAND)
+        self.vbox.Add((-1, 10), 0, wx.EXPAND)
         self.vbox.Add(self.calc_button, 0, wx.EXPAND)
-        self.vbox.Add((-1, 20), 0, wx.EXPAND)
+        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        self.vbox.Add(self.gen_mask_button, 0, wx.EXPAND)
+        self.vbox.Add((-1, 10), 0, wx.EXPAND)
         self.vbox.Add(self.fgs_results, 0, wx.EXPAND)
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
         self.hbox.Add(self.vbox, 0, wx.EXPAND)
@@ -284,7 +291,7 @@ class MainPanel(wx.Panel):
 
         self.SetSizer(self.hbox)
 
-    def calc_gdw(self, event):
+    def on_calc_gdw(self, event):
         """ Performs the GDW Calculation on button click """
         print("Button Pressed")
 
@@ -323,7 +330,7 @@ class MainPanel(wx.Panel):
         self.ee_loss = 0
         self.fe_loss = 0
 
-        # TODO: This isn't pythonic at all, but I'm in a rush
+        # TODO: This isn't pythonic at all, but I'm ~~in a rush~~ lazy
         for rcd in self.coord_list:
             if rcd[2] == 'probe':
                 self.gdw += 1
@@ -380,6 +387,122 @@ class MainPanel(wx.Panel):
 
         self.center_x_result.SetLabel(str(self.center_xy[0]))
         self.center_y_result.SetLabel(str(self.center_xy[1]))
+
+    def on_gen_mask(self, event):
+        """ Handle the gen_mask event """
+        mask = "MDH00"
+        statusbar = self.parent.StatusBar
+        try:
+            gen_mask_file(self.coord_list, mask, self.die_xy, self.dia)
+        except Exception as err:
+            print(err)
+            statusbar.SetStatusText("Error: {}".format(err))
+            raise
+        statusbar.SetStatusText("Mask saved to '{}'".format(mask))
+
+
+def gen_mask_file(probe_list, mask_name, die_xy, dia):
+    """
+    Generates a text file that can be read by the LabVIEW OWT program.
+
+    probe_list should only contain die that are fully on the wafer. Die that
+    are within the edxlucion zones but still fully on the wafer *are*
+    included.
+
+    probe_list is what's returned from maxGDW, so it's a list of
+    (xCol, yRow, xCoord, yCoord, dieStatus) tuples
+    """
+
+    # 1. Create the file
+    # 2. Add the header
+    # 3. Append only the "probe" die to the die list.
+    # 4. Finalize the file.
+    path = os.path.join("\\\\hydrogen\\engineering\\\
+Software\\LabView\\OWT\\masks", mask_name + ".ini")
+    print("Saving mask file data to:")
+    print(path)
+
+    # this defines where (1, 1) actually is.
+    # TODO: Verify that "- 2" works for all cases
+    edge_row = min({i[1] for i in probe_list if i[2] == 'excl'}) - 2
+    edge_col = min({i[0] for i in probe_list if i[2] == 'excl'}) - 2
+    print("min(edge_row) = {}  min(edge_col) = {}".format(edge_row, edge_col))
+
+    # Adjust the original data to the origin
+    for _i, _ in enumerate(probe_list):
+        probe_list[_i] = list(probe_list[_i])
+        probe_list[_i][0] -= edge_col
+        probe_list[_i][1] -= edge_row
+        probe_list[_i] = tuple(probe_list[_i])
+
+    n_rc = (max({i[1] for i in probe_list}) + 1,
+           max({i[0] for i in probe_list}) + 1)
+    print("n_rc = {}".format(n_rc))
+
+    # create a list of every die
+    all_die = []
+    for row in range(1, n_rc[0] + 1):        # Need +1 b/c end pt omitted
+        for col in range(1, n_rc[1] + 1):    # Need +1 b/c end pt omitted
+            all_die.append((row, col))
+
+    # Note: I need list() so that I make copies of the data. Without it,
+    # all these things would be pointing to the same all_die object.
+    test_all_list = list(all_die)
+    edge_list = list(all_die)
+    every_list = list(all_die)
+    die_to_probe = []
+
+    # This algorithm is crap, but it works.
+    # Create the exclusion list to add to the OWT file.
+    # NOTE: I SWITCH FROM XY to RC HERE!
+    for item in probe_list:
+        _rc = (item[1], item[0])
+        _state = item[2]
+        try:
+            if _state == "probe":
+                test_all_list.remove(_rc)
+                die_to_probe.append(_rc)
+            if _state in ("excl", "flatExcl", "probe"):
+                every_list.remove(_rc)
+            if _state in ("excl", "flatExcl"):
+                edge_list.remove(_rc)
+        except ValueError:
+            print(_rc, _state)
+            raise
+
+    # Determine the starting RC - this will be the min row, min column that
+    # as a "probe" value. However, since the GDW algorithm now puts the
+    # origin somewhere far off the wafer, we need to adjust the values a bit.
+    min_row = min(i[0] for i in die_to_probe)
+    min_col = min(i[1] for i in die_to_probe if i[0] == min_row)
+    start_rc = (min_row, min_col)
+    print("Landing Die: {}".format(start_rc))
+
+    test_all_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in test_all_list])
+    edge_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in edge_list])
+    every_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in every_list])
+
+    home_rc = (1, 1)                         # Static value
+
+    with open(path, 'w') as openf:
+        openf.write("[Mask]\n")
+        openf.write("Mask = \"%s\"\n" % mask_name)
+        openf.write("Die X = %f\n" % die_xy[0])
+        openf.write("Die Y = %f\n" % die_xy[1])
+        openf.write("Flat = 0\n")                   # always 0
+        openf.write("\n")
+        openf.write("[%dmm]\n" % dia)
+        openf.write("Rows = %d\n" % n_rc[0])
+        openf.write("Cols = %d\n" % n_rc[1])
+        openf.write("Home Row = %d\n" % home_rc[0])
+        openf.write("Home Col = %d\n" % home_rc[1])
+        openf.write("Start Row = %d\n" % start_rc[0])
+        openf.write("Start Col = %d\n" % start_rc[1])
+        openf.write("Every = \"" + every_string[:-2] + "\"\n")
+        openf.write("TestAll = \"" + test_all_string[:-2] + "\"\n")
+        openf.write("Edge Inking = \"" + edge_string[:-2] + "\"\n")
+        openf.write("\n[Devices]\n")
+        openf.write("PCM = \"0.2,0,0,,T\"\n")
 
 
 def main():

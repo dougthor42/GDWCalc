@@ -13,6 +13,13 @@ Knows about SEMI SPEC M1-0302 which defines wafer flat sizes.
 
 Changelog:
 ----------
+v1.5.5 : 2015-08-25
+  - Added ability to export map as an OWT mask file.
+  - Renamed some variables to match my coding style.
+
+v1.5.4 : 2015-08-05
+  - Updated build method, no changes to program.
+
 v1.5.3 : 2015-03-30
   - Fixed issue where plot colors would change if 0 die were lost for
     a given category
