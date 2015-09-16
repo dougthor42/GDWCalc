@@ -51,8 +51,8 @@ except (SystemError, ValueError):
 
 # TODO: Recode maxGDW to to include 'print' statements?
 
-TITLE_TEXT = "GDWCalc v{}   Releasaed {}".format(__version__,
-                                                 __released__)
+TITLE_TEXT = "GDWCalc v{}   Released {}".format(__version__,
+                                                __released__)
 INSTRUCTION_TEXT = """
 Keyboard Shortcuts:
 Enter\tCalculate GDW
@@ -82,7 +82,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self,
                           None,
                           title=TITLE_TEXT,
-                          size=(1000, 720),
+                          size=(1100, 820),
                           )
         self.init_ui()
 
@@ -192,6 +192,13 @@ class MainPanel(wx.Panel):
         self.y_fo_lbl = wx.StaticText(self, label="Y Offset (mm)")
         self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
 
+        # Force First Die Coord
+        self.fdc_chk = wx.CheckBox(self, label="Force 1st Die Coord")
+        self.x_fdc_lbl = wx.StaticText(self, label="X (Column) Coord")
+        self.x_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+        self.y_fdc_lbl = wx.StaticText(self, label="Y (Row) Coord")
+        self.y_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
         self.Bind(wx.EVT_BUTTON, self.on_calc_gdw, self.calc_button)
@@ -249,15 +256,20 @@ class MainPanel(wx.Panel):
         # Set the Layout
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.fgs_inputs = wx.FlexGridSizer(rows=8, cols=2)
+        self.fgs_inputs = wx.FlexGridSizer(rows=13, cols=2)
         self.fgs_inputs.AddMany([self.x_lbl, self.x_input,
                                  self.y_lbl, self.y_input,
                                  self.dia_lbl, self.dia_input,
                                  self.ee_lbl, self.ee_input,
                                  self.fe_lbl, self.fe_input,
+                                 (-1, 10), (-1, -1),
                                  self.fo_chk, (-1, -1),
                                  self.x_fo_lbl, self.x_fo_input,
                                  self.y_fo_lbl, self.y_fo_input,
+                                 (-1, 10), (-1, -1),
+                                 self.fdc_chk, (-1, -1),
+                                 self.x_fdc_lbl, self.x_fdc_input,
+                                 self.y_fdc_lbl, self.y_fdc_input,
                                  ])
 
         self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, hgap=10)
@@ -305,6 +317,7 @@ class MainPanel(wx.Panel):
         self.x_fo = float(self.x_fo_input.Value)
         self.y_fo = float(self.y_fo_input.Value)
         self.fo = (self.x_fo, self.y_fo)
+        self.grid_offset = (0, 0)
 
         # If using fixed offsets, call other function.
         if self.fo_bool:
@@ -322,6 +335,27 @@ class MainPanel(wx.Panel):
                                                     self.fe,
                                                     )
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
+
+        # If using a forced starting die (top-left), adjust coords
+        if self.fdc_chk.Value:
+            # Gind the topmost then leftmost probed die.
+            min_y = min({c[1] for c in self.coord_list if c[2] == "probe"})
+            min_x = min([c[0] for c in self.coord_list
+                         if c[2] == "probe" and c[1] == min_y])
+
+            # Calculate the delta
+            delta_x = min_x - int(self.x_fdc_input.Value)
+            delta_y = min_y - int(self.y_fdc_input.Value)
+
+            self.grid_offset = (delta_x, delta_y)
+
+            # Update the coord list and the center xy location.
+            self.coord_list = [(i[0] - delta_x,
+                                i[1] - delta_y,
+                                i[2]) for i in self.coord_list]
+
+            self.center_xy = (self.center_xy[0] - delta_x,
+                              self.center_xy[1] - delta_y)
 
         # Calculate the Die Counts
         # TODO: Update gdw.maxGDW to return these values instead
@@ -392,8 +426,10 @@ class MainPanel(wx.Panel):
         """ Handle the gen_mask event """
         mask = "MDH00"
         statusbar = self.parent.StatusBar
+
         try:
-            gen_mask_file(self.coord_list, mask, self.die_xy, self.dia)
+            gen_mask_file(self.coord_list, mask,
+                          self.die_xy, self.dia, self.fdc_chk.Value)
         except Exception as err:
             print(err)
             statusbar.SetStatusText("Error: {}".format(err))
@@ -401,7 +437,7 @@ class MainPanel(wx.Panel):
         statusbar.SetStatusText("Mask saved to '{}'".format(mask))
 
 
-def gen_mask_file(probe_list, mask_name, die_xy, dia):
+def gen_mask_file(probe_list, mask_name, die_xy, dia, fixed_start_coord=False):
     """
     Generates a text file that can be read by the LabVIEW OWT program.
 
@@ -422,18 +458,20 @@ Software\\LabView\\OWT\\masks", mask_name + ".ini")
     print("Saving mask file data to:")
     print(path)
 
-    # this defines where (1, 1) actually is.
-    # TODO: Verify that "- 2" works for all cases
-    edge_row = min({i[1] for i in probe_list if i[2] == 'excl'}) - 2
-    edge_col = min({i[0] for i in probe_list if i[2] == 'excl'}) - 2
-    print("min(edge_row) = {}  min(edge_col) = {}".format(edge_row, edge_col))
+    # Auto-calculate the edge row and column
+    if not fixed_start_coord:
+        # Adjust the original data to the origin
+        # this defines where (1, 1) actually is.
+        # TODO: Verify that "- 2" works for all cases
+        edge_row = min({i[1] for i in probe_list if i[2] == 'excl'}) - 2
+        edge_col = min({i[0] for i in probe_list if i[2] == 'excl'}) - 2
+        print("edge_row = {}  edge_col = {}".format(edge_row, edge_col))
 
-    # Adjust the original data to the origin
-    for _i, _ in enumerate(probe_list):
-        probe_list[_i] = list(probe_list[_i])
-        probe_list[_i][0] -= edge_col
-        probe_list[_i][1] -= edge_row
-        probe_list[_i] = tuple(probe_list[_i])
+        for _i, _ in enumerate(probe_list):
+            probe_list[_i] = list(probe_list[_i])
+            probe_list[_i][0] -= edge_col
+            probe_list[_i][1] -= edge_row
+            probe_list[_i] = tuple(probe_list[_i])
 
     n_rc = (max({i[1] for i in probe_list}) + 1,
             max({i[0] for i in probe_list}) + 1)
@@ -467,8 +505,9 @@ Software\\LabView\\OWT\\masks", mask_name + ".ini")
             if _state in ("excl", "flatExcl"):
                 edge_list.remove(_rc)
         except ValueError:
-            print(_rc, _state)
-            raise
+#            print(_rc, _state)
+#            raise
+            continue
 
     # Determine the starting RC - this will be the min row, min column that
     # as a "probe" value. However, since the GDW algorithm now puts the

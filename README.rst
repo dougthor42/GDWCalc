@@ -13,6 +13,9 @@ Knows about SEMI SPEC M1-0302 which defines wafer flat sizes.
 
 Changelog:
 ----------
+v1.5.6 : 2015-09-16
+  - Added ability to set the 1st die coordinates.
+
 v1.5.5 : 2015-08-25
   - Added ability to export map as an OWT mask file.
   - Renamed some variables to match my coding style.
