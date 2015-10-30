@@ -13,6 +13,10 @@ Knows about SEMI SPEC M1-0302 which defines wafer flat sizes.
 
 Changelog:
 ----------
+v1.5.7 : 2015-10-30
+  - Updated wafer_map to version 1.0.11. This adds a display for radius to
+    the status bar.
+
 v1.5.6 : 2015-09-16
   - Added ability to set the 1st die coordinates.
 

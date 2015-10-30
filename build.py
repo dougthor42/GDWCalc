@@ -41,7 +41,7 @@ EXCLUDED_MODULES = ["_gtkagg",
 EX_MOD_STR = ",".join(EXCLUDED_MODULES)
 
 CALL_STR = ['cxfreeze.bat', "GDWCalc.py",
-            '--target-dir', "dist\GDWCalc v1.5.5",
+            '--target-dir', "dist\GDWCalc v1.5.7",
             "-s", "--compress",
             "--base-name", "Win32GUI",
             "--exclude-modules", EX_MOD_STR,
@@ -66,7 +66,7 @@ print("--------------------------------\n")
 print("Bundling into .zip file...")
 args = docopt(__doc__, version=__version__)
 #folder = args['PATH']
-folder = "dist\GDWCalc v1.5.5"
+folder = "dist\GDWCalc v1.5.7"
 
 zipname = osp.split(folder)[1] + '.zip'
 zippath = osp.join(osp.split(folder)[0], zipname)

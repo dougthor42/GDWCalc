@@ -23,16 +23,16 @@ path = []
 
 GUI2Exe_Target_1 = Executable(
     # what to build
-    script="GDWCalc v1.5.5.py",
+    script="GDWCalc v1.5.7.py",
     initScript=None,
     base='Win32GUI',
     targetDir=r"dist",
-    targetName="GDWCalc v1.5.5.exe",
+    targetName="GDWCalc v1.5.7.exe",
     compress=True,
     copyDependentFiles=True,
     appendScriptToExe=False,
     appendScriptToLibrary=False,
-    icon=None
+    icon=r"rsc/wafer.ico"
     )
 
 # That's serious now: we have all (or almost all) the options cx_Freeze
@@ -40,7 +40,7 @@ GUI2Exe_Target_1 = Executable(
 # and not used. Some of them I didn't even know about.
 
 setup(
-    version="1.5.5",
+    version="1.5.7",
     description="A calculator for gross die per wafer (GDW)",
     author="Douglas Thor",
     name="GDWCalc",

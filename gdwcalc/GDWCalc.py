@@ -390,7 +390,7 @@ class MainPanel(wx.Panel):
         self.wafer_map.xyd = self.coord_list
         self.wafer_map.wafer_info = self.wafer_info
         self.wafer_map.grid_center = self.center_xy
-        self.wafer_map.xyd_dict = self.wafer_map.xyd_to_dict(self.coord_list)
+        self.wafer_map.xyd_dict = wm_core.xyd_to_dict(self.coord_list)
         self.wafer_map._create_legend()
         self.wafer_map.draw_die()
         self.wafer_map.draw_die_center()

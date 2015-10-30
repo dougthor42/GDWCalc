@@ -110,6 +110,7 @@ if sys.platform == 'win32':        # uncomment this to remove console window.
 exe1 = Executable(file_to_build,
                   base=base,
 #                  targetName="PyBank",         # Doesn't work :-(
+#                  icon="rsc\\wafer.png",
                   )
 
 # List of which executables to build.
