@@ -19,13 +19,17 @@
 # ---------------------------------------------------------------------------
 # Standard Library
 from __future__ import print_function
-import wx
+import itertools
+import math
 import os
 
 # Third Party
 import douglib.gdw as gdw
+import numpy as np
 import wafer_map.wm_core as wm_core
 import wafer_map.wm_info as wm_info
+import wx
+import wx.lib.plot as wxplot
 
 # Package / Application
 try:
@@ -82,7 +86,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self,
                           None,
                           title=TITLE_TEXT,
-                          size=(1100, 820),
+                          size=(1400, 820),
                           )
         self.init_ui()
 
@@ -95,6 +99,10 @@ class MainFrame(wx.Frame):
         self._add_menu_items()
         self._add_menus()
         self._bind_events()
+
+        # Initialize default states
+        self.mv_outline.Check()
+        self.mv_crosshairs.Check()
 
         # Set the MenuBar and create a status bar (easy thanks to wx.Frame)
         self.SetMenuBar(self.menu_bar)
@@ -123,20 +131,46 @@ class MainFrame(wx.Frame):
                                    "Calculate Gross Die per Wafer",
                                    )
 
+        self.mv_zoomfit = wx.MenuItem(self.mview,
+                                      wx.ID_ANY,
+                                      "Zoom &Fit\tHome",
+                                      "Zoom to Fit",
+                                      )
+        self.mv_crosshairs = wx.MenuItem(self.mview,
+                                         wx.ID_ANY,
+                                         "Crosshairs\tC",
+                                         "Show or hide the crosshairs",
+                                         wx.ITEM_CHECK,
+                                         )
+        self.mv_outline = wx.MenuItem(self.mview,
+                                      wx.ID_ANY,
+                                      "Wafer Outline\tO",
+                                      "Show or hide the wafer outline",
+                                      wx.ITEM_CHECK,
+                                      )
+
     def _add_menu_items(self):
         """ Appends MenuItems to each menu """
         self.mfile.AppendItem(self.mf_close)
         self.medit.AppendItem(self.me_calc)
+        self.mview.AppendItem(self.mv_zoomfit)
+        self.mview.AppendSeparator()
+        self.mview.AppendItem(self.mv_crosshairs)
+        self.mview.AppendItem(self.mv_outline)
 
     def _add_menus(self):
         """ Appends each menu to the menu bar """
         self.menu_bar.Append(self.mfile, "&File")
         self.menu_bar.Append(self.medit, "&Edit")
+        self.menu_bar.Append(self.mview, "&View")
 
     def _bind_events(self):
         """ Binds events to varoius MenuItems """
         self.Bind(wx.EVT_MENU, self.on_quit, self.mf_close)
         self.Bind(wx.EVT_MENU, self.on_calc, self.me_calc)
+        self.Bind(wx.EVT_MENU, self.zoom_fit, self.mv_zoomfit)
+        self.Bind(wx.EVT_MENU, self.toggle_crosshairs, self.mv_crosshairs)
+        self.Bind(wx.EVT_MENU, self.toggle_outline, self.mv_outline)
 
     def on_quit(self, event):
         """ Actions for the quit event """
@@ -145,6 +179,19 @@ class MainFrame(wx.Frame):
     def on_calc(self, event):
         """ Action for Calc event """
         self.panel.on_calc_gdw(event)
+
+    def zoom_fit(self, event):
+        """ Call the WaferMapPanel.zoom_fill() method """
+        print("Frame Event!")
+        self.panel.wafer_map.zoom_fill()
+
+    def toggle_crosshairs(self, event):
+        """ Call the WaferMapPanel toggle_crosshairs() method """
+        self.panel.wafer_map.toggle_crosshairs()
+
+    def toggle_outline(self, event):
+        """ Call the WaferMapPanel.toggle_outline() method """
+        self.panel.wafer_map.toggle_outline()
 
 
 class MainPanel(wx.Panel):
@@ -219,6 +266,14 @@ class MainPanel(wx.Panel):
                                                plot_die_centers=True,
                                                discrete_legend_values=legend_values
                                                )
+
+        # Radius Histograms
+        radius_sqrd_data = list(
+           (self.wafer_info.die_size[0] * (self.wafer_info.center_xy[0] - die[0]))**2
+           + (self.wafer_info.die_size[1] * (self.wafer_info.center_xy[1] - die[1]))**2
+           for die in self.coord_list)
+        radius_data = list(math.sqrt(item) for item in radius_sqrd_data)
+        self.histograms = RadiusPlots(self, radius_data)
 
         # Result Info
         self.gdw_lbl = wx.StaticText(self, label="Gross Die per Wafer:")
@@ -299,7 +354,8 @@ class MainPanel(wx.Panel):
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
         self.hbox.Add(self.vbox, 0, wx.EXPAND)
         self.hbox.Add((20, -1), 0, wx.EXPAND)
-        self.hbox.Add(self.wafer_map, 1, wx.EXPAND)
+        self.hbox.Add(self.wafer_map, 2, wx.EXPAND)
+        self.hbox.Add(self.histograms, 1, wx.EXPAND)
 
         self.SetSizer(self.hbox)
 
@@ -397,8 +453,13 @@ class MainPanel(wx.Panel):
         self.wafer_map.draw_wafer_objects()
         self.wafer_map.zoom_fill()
 
-        self.Refresh()
-        self.Update()
+        # Calcualte new radius data
+        radius_sqrd_data = list(
+           (self.wafer_info.die_size[0] * (self.wafer_info.center_xy[0] - die[0]))**2
+           + (self.wafer_info.die_size[1] * (self.wafer_info.center_xy[1] - die[1]))**2
+           for die in self.coord_list)
+        new_radius_data = list(math.sqrt(item) for item in radius_sqrd_data)
+        self.histograms.update(new_radius_data)
 
         self.gdw_result.SetLabel(str(self.gdw))
         self.ee_loss_result.SetLabel(str(self.ee_loss))
@@ -422,6 +483,10 @@ class MainPanel(wx.Panel):
         self.center_x_result.SetLabel(str(self.center_xy[0]))
         self.center_y_result.SetLabel(str(self.center_xy[1]))
 
+        # Update the screen
+        self.Refresh()
+        self.Update()
+
     def on_gen_mask(self, event):
         """ Handle the gen_mask event """
         mask = "MDH00"
@@ -435,6 +500,147 @@ class MainPanel(wx.Panel):
             statusbar.SetStatusText("Error: {}".format(err))
             raise
         statusbar.SetStatusText("Mask saved to '{}'".format(mask))
+
+
+
+class RadiusPlots(wx.Panel):
+    """ A container for the two radius histograms """
+    def __init__(self, parent, radius_data):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.radius_data = radius_data
+        self._init_ui()
+
+        self._bind_events()
+
+    def _init_ui(self):
+        """ """
+        # create the items
+        self.lin_binspec = range(0, 81, 5)
+
+        # bins of equal area, area = 2000 mm^2
+        self.eq_area_binspec = [0, 25.2313, 35.6825, 43.7019,
+                                50.4627, 56.419, 61.8039,
+                                66.7558, 71.365, 75.694]
+
+        self.radius_plot = Histogram(self,
+                                     self.radius_data,
+                                     self.lin_binspec,
+                                     "Bin Size = 5mm",
+                                     "Radius (mm)",
+                                     )
+        self.eq_area_plot = Histogram(self,
+                                      self.radius_data,
+                                      self.eq_area_binspec,
+                                      "BinSize = 2000 mm^2",
+                                      "Radius (mm)",
+                                      )
+
+        # Create the layout manager
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.radius_plot, 1, wx.EXPAND)
+        self.vbox.Add(self.eq_area_plot, 1, wx.EXPAND)
+        self.SetSizer(self.vbox)
+
+    def _bind_events(self):
+        """ """
+        pass
+
+    def update(self, data):
+        """ Updates the two radius plots """
+        self.radius_plot.update(data, self.lin_binspec)
+        self.eq_area_plot.update(data, self.eq_area_binspec)
+
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+class Histogram(wxplot.PlotCanvas):
+    """
+    A homebrewed histogram plot
+
+    data must be a 1d list or tuple of floats or integers.
+
+    binspec must be a 1d list or tuple of floats or integers.
+
+    binspec defines the bin cutoff points
+    For example, binspec = [0, 1, 2, 3, 4] would result in 6 bins:
+        x < 0
+        0 <= x < 1
+        1 <= x < 2
+        3 <= x < 3
+        3 <= x < 4
+        x >= 4
+
+    """
+    def __init__(self, parent, data, binspec,
+                 title="Histogram", x_label="Bin", y_label="Count"):
+        wxplot.PlotCanvas.__init__(self, parent)
+        self.parent = parent
+        self.data = data
+        self.binspec = binspec
+        self.hist_data = None
+        self.title = title
+        self.x_label = x_label
+        self.y_label = y_label
+
+#        self._init_data()
+
+#        self._init_ui()
+        self.update(self.data, self.binspec)
+
+    def _init_ui(self):
+        pass
+
+    def _init_data(self):
+        pass
+
+    def update(self, data, binspec):
+        self.Clear()
+
+        # other stuff uses numpy so I can too.
+        hist, edges = np.histogram(data, binspec)
+
+        bars = []
+        for n, (count, (low, high)) in enumerate(zip(hist, pairwise(edges))):
+
+            pts = [(low, 0), (low, count)]
+            ln = wxplot.PolyLine(pts,
+                                 colour='blue',
+                                 width=3,
+                                 )
+            bars.append(ln)
+
+            # hack to get things to look like a "bar"...
+            pts2 = [(high, 0), (high, count)]
+            ln2 = wxplot.PolyLine(pts2,
+                                  colour='blue',
+                                  width=3,
+                                  )
+            bars.append(ln2)
+            pts3 = [(low, count), (high, count)]
+            ln3 = wxplot.PolyLine(pts3,
+                                  colour='blue',
+                                  width=3,
+                                  )
+            bars.append(ln3)
+
+        bars = [wxplot.PolyHistogram(hist, edges)]
+
+        plot = wxplot.PlotGraphics(bars,
+                                   title=self.title,
+                                   xLabel=self.x_label,
+                                   yLabel=self.y_label,
+                                   )
+
+        self.XSpec = (0, 75)
+
+        self.EnableGrid = True
+        self.Draw(plot)
 
 
 def gen_mask_file(probe_list, mask_name, die_xy, dia, fixed_start_coord=False):

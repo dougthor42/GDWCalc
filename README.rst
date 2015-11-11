@@ -13,6 +13,13 @@ Knows about SEMI SPEC M1-0302 which defines wafer flat sizes.
 
 Changelog:
 ----------
+v1.6.0 : 2015-11-11
+  - Added keyboard shortcuts for wafer map:
+    - Home: zoom fill
+    - o: toggle wafer outline on/off
+    - c: toggle wafer center crosshairs on/off
+  - Added histograms of # die by Radius (mm) and by equal-area (2000mm^2)
+
 v1.5.7 : 2015-10-30
   - Updated wafer_map to version 1.0.11. This adds a display for radius to
     the status bar.
