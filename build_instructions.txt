@@ -1,0 +1,34 @@
+
+
+
+1.  Update version info in __init__.py and README.rst
+2.  Run build_exe.bat
+3.  (optional) Run "python bundle.py "build\exe.win32-2.7"
+
+
+
+
+2015-08-05:
+These instructions are no longer value. See above for correct instructions.
+
+Doug, follow these instructions to build a new version for Windows Standalone:
+
+1. Update version info in:
+	README.rst
+		Changelog
+	setup.py
+		script=
+		targetName=
+		version=
+	build.py
+		CALL_STR
+		folder
+	build.bat
+		line 3
+		line 4
+
+2. In windows CMD prompt, run build.bat.
+	files will be put in dist\<newvers> folder
+
+3. (optional) Run "python bundle.py "dist\<newvers>"
+	This bundles the app into a .zip for easy emailing.
