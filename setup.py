@@ -1,64 +1,54 @@
 # -*- coding: utf-8 -*-
-# Let's start with some default (for me) imports...
+"""
+setup.py file for GDWCalc.
 
-from cx_Freeze import setup, Executable
+@author: dthor
+"""
+### #------------------------------------------------------------------------
+### Imports
+### #------------------------------------------------------------------------
+# Standard Library
+from setuptools import setup, find_packages
+import logging
 
-# Process the includes, excludes and packages first
-includes = []
-excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'email', 'pywin.debugger',
-            'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',
-            'Tkconstants', 'Tkinter', 'scipy', 'pil']
-packages = []
-path = []
+# Third Party
 
-# This is a place where the user custom code may go. You can do almost
-# whatever you want, even modify the data_files, includes and friends
-# here as long as they have the same variable name that the setup call
-# below is expecting.
+# Package / Application
+from gdwcalc import (__version__,
+                     __project_url__,
+                     __project_name__,
+                     __description__,
+                     __long_descr__,
+                     )
 
-# No custom code added
-
-# The setup for cx_Freeze is different from py2exe. Here I am going to
-# use the Python class Executable from cx_Freeze
-
-GUI2Exe_Target_1 = Executable(
-    # what to build
-    script="GDWCalc v1.5.7.py",
-    initScript=None,
-    base='Win32GUI',
-    targetDir=r"dist",
-    targetName="GDWCalc v1.5.7.exe",
-    compress=True,
-    copyDependentFiles=True,
-    appendScriptToExe=False,
-    appendScriptToLibrary=False,
-    icon=r"rsc/wafer.ico"
-    )
-
-# That's serious now: we have all (or almost all) the options cx_Freeze
-# supports. I put them all even if some of them are usually defaulted
-# and not used. Some of them I didn't even know about.
+# turn off logging if we're going to build a distribution
+logging.disable(logging.CRITICAL)
 
 setup(
-    version="1.5.7",
-    description="A calculator for gross die per wafer (GDW)",
+    name=__project_name__,
+    version=__version__,
+    description=__description__,
+    long_description=__long_descr__,
+    packages=find_packages(),
     author="Douglas Thor",
-    name="GDWCalc",
-    options={"build_exe": {"includes": includes,
-                           "excludes": excludes,
-                           "packages": packages,
-                           "path": path
-                           }
-             },
-    executables=[GUI2Exe_Target_1]
-    )
-
-# This is a place where any post-compile code may go.
-# You can add as much code as you want, which can be used, for example,
-# to clean up your folders or to do some particular post-compilation
-# actions.
-
-# No post-compilation code added
-
-
-# And we are done. That's a setup script :-D
+    url=__project_url__,
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Environment :: Win32 (MS Windows)",
+        "Environment :: X11 Applications",
+        "Environment :: MacOS X",
+        "Intended Audience :: End Users/Desktop",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Topic :: Utilities",
+        ],
+    requires=["wxPython",
+              "douglib",
+              "wafer_map"
+              ],
+)
