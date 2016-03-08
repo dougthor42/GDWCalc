@@ -42,8 +42,8 @@ clean-up:
     - pip uninstall green -y
     - pip uninstall python-termstyle -y
 
-pip-install:
-  stage: init
+tag_pip-install:
+  stage: tag_init
   when: always
   only:
     - tags
@@ -53,8 +53,8 @@ pip-install:
     - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
     - pip install green
 
-bundle:
-  stage: deploy
+tag_bundle:
+  stage: tag_deploy
   when: on_success
   only:
     - tags
@@ -66,8 +66,8 @@ bundle:
       - build/exe.win-amd64-3.4/
       - dist/*.whl
 
-clean-up:
-  stage: cleanup
+tag_clean-up:
+  stage: tag_cleanup
   when: always
   only:
     - tags
