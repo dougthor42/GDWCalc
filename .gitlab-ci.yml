@@ -11,6 +11,8 @@ before_script:
 pip-install:
   stage: init
   when: always
+  only:
+    - master
   script:
     - pip install wafer_map
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
@@ -26,12 +28,12 @@ pip-install:
 bundle:
   stage: deploy
   when: on_success
+  only:
+    - tags
   script:
     - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
-    only:
-      - tags
     paths:
       - build/exe.win-amd64-3.4/
       - dist/*.whl
@@ -39,6 +41,8 @@ bundle:
 clean-up:
   stage: cleanup
   when: always
+  only:
+    - master
   script:
     - pip uninstall wafer_map -y
     - pip uninstall wxPython-Phoenix -y
