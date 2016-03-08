@@ -1,0 +1,49 @@
+stages:
+  - init
+  - test
+  - deploy
+  - cleanup
+
+before_script:
+  - call C:\Python34\scripts\env.bat
+  - python -c "import sys;print(sys.version)"
+
+pip-install:
+  stage: init
+  when: always
+  script:
+    - pip install colorama
+    - pip install cx_Freeze
+    - pip install numpy
+    - pip install wafer_map
+    - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
+    - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
+
+# Run the test(s)
+verify-yml:
+  stage: test
+  when: on_success
+  script:
+    - python test.py
+
+build-exe:
+  stage: deploy
+  when: on_success
+  script:
+    - python -c "import sys;print(sys.version)"
+  artifacts:
+#    only:
+#      - tags
+    paths:
+      - build\exe.win-amd64-3.4\
+
+clean-up:
+  stage: cleanup
+  when: always
+  script:
+    - pip uninstall colorama -y
+    - pip uninstall cx_Freeze -y
+    - pip uninstall numpy -y
+    - pip uninstall wafer_map -y
+    - pip uninstall wxpython -y
+    - pip uninstall douglib -y
