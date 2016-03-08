@@ -30,7 +30,8 @@ build-exe:
   stage: deploy
   when: on_success
   script:
-    - python -c "import sys;print(sys.version)"
+    - python build_exe.py build
+
   artifacts:
 #    only:
 #      - tags
