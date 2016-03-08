@@ -1,9 +1,12 @@
 stages:
   - init
-#  - test
-  - deploy
+  - test
   - cleanup
+  - tag_init
+  - tag_deploy
+  - tag_cleanup
 
+# Set environment vars
 before_script:
   - call C:\WinPython34\scripts\env.bat
   - python -c "import sys;print(sys.version)"
@@ -17,13 +20,38 @@ pip-install:
     - pip install wafer_map
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
     - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
+    - pip install green
 
-# Run the test(s)
-#tests:
-#  stage: test
-#  when: on_success
-#  script:
-#    - echo Not testing
+tests:
+  stage: test
+  when: on_success
+   only:
+     - master
+  script:
+    - green -vvv gdwcalc
+
+clean-up:
+  stage: cleanup
+  when: always
+  only:
+    - master
+  script:
+    - pip uninstall wafer_map -y
+    - pip uninstall wxPython-Phoenix -y
+    - pip uninstall douglib -y
+    - pip uninstall green -y
+    - pip uninstall python-termstyle -y
+
+pip-install:
+  stage: init
+  when: always
+  only:
+    - tags
+  script:
+    - pip install wafer_map
+    - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
+    - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
+    - pip install green
 
 bundle:
   stage: deploy
@@ -42,8 +70,10 @@ clean-up:
   stage: cleanup
   when: always
   only:
-    - master
+    - tags
   script:
     - pip uninstall wafer_map -y
     - pip uninstall wxPython-Phoenix -y
     - pip uninstall douglib -y
+    - pip uninstall green -y
+    - pip uninstall python-termstyle -y
