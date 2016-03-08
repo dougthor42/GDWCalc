@@ -502,7 +502,6 @@ class MainPanel(wx.Panel):
         statusbar.SetStatusText("Mask saved to '{}'".format(mask))
 
 
-
 class RadiusPlots(wx.Panel):
     """ A container for the two radius histograms """
     def __init__(self, parent, radius_data):
