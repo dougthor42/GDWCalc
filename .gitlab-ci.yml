@@ -17,23 +17,24 @@ pip-install:
     - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
 
 # Run the test(s)
-#verify-yml:
+#tests:
 #  stage: test
 #  when: on_success
 #  script:
 #    - echo Not testing
 
-build-exe:
+bundle:
   stage: deploy
   when: on_success
   script:
     - python build_exe.py build
-
+    - python setup.py sdist bdist_wheel
   artifacts:
 #    only:
 #      - tags
     paths:
       - build/exe.win-amd64-3.4/
+      - dist/*.whl
 
 clean-up:
   stage: cleanup
