@@ -151,12 +151,12 @@ class MainFrame(wx.Frame):
 
     def _add_menu_items(self):
         """ Appends MenuItems to each menu """
-        self.mfile.AppendItem(self.mf_close)
-        self.medit.AppendItem(self.me_calc)
-        self.mview.AppendItem(self.mv_zoomfit)
+        self.mfile.Append(self.mf_close)
+        self.medit.Append(self.me_calc)
+        self.mview.Append(self.mv_zoomfit)
         self.mview.AppendSeparator()
-        self.mview.AppendItem(self.mv_crosshairs)
-        self.mview.AppendItem(self.mv_outline)
+        self.mview.Append(self.mv_crosshairs)
+        self.mview.Append(self.mv_outline)
 
     def _add_menus(self):
         """ Appends each menu to the menu bar """
@@ -311,7 +311,7 @@ class MainPanel(wx.Panel):
         # Set the Layout
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.fgs_inputs = wx.FlexGridSizer(rows=13, cols=2)
+        self.fgs_inputs = wx.FlexGridSizer(rows=13, cols=2, vgap=0, hgap=0)
         self.fgs_inputs.AddMany([self.x_lbl, self.x_input,
                                  self.y_lbl, self.y_input,
                                  self.dia_lbl, self.dia_input,
@@ -327,7 +327,7 @@ class MainPanel(wx.Panel):
                                  self.y_fdc_lbl, self.y_fdc_input,
                                  ])
 
-        self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, hgap=10)
+        self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, vgap=0, hgap=10)
 
         # Add items to the results layout
         self.fgs_results.AddMany([self.gdw_lbl, self.gdw_result,
