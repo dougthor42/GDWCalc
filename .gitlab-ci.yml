@@ -30,8 +30,8 @@ bundle:
     - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
-#    only:
-#      - tags
+    only:
+      - tags
     paths:
       - build/exe.win-amd64-3.4/
       - dist/*.whl

@@ -14,4 +14,4 @@ __project_url__ = "https://github.com/dougthor42/GDWCalc"
 __project_name__ = "GDWCalc"
 __description__ = "Gross Die per Wafer Calculator"
 __long_descr__ = __doc__
-__released__ = "2016-03-07"
+__released__ = "2016-03-08"
