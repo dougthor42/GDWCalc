@@ -13,6 +13,9 @@ Knows about SEMI SPEC M1-0302 which defines wafer flat sizes.
 
 Changelog:
 ----------
+v1.6.1 : 2016-03-08
+  - Executable is now built using Python 3.4
+
 v1.6.0 : 2015-11-11
   - Added keyboard shortcuts for wafer map:
     - Home: zoom fill
