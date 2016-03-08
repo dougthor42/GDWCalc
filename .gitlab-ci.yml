@@ -25,7 +25,7 @@ pip-install:
 tests:
   stage: test
   when: on_success
-   only:
+  only:
      - master
   script:
     - green -vvv gdwcalc
