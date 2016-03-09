@@ -30,7 +30,7 @@ tests:
   when: on_success
   script:
     - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    - green -vvv gdwcalc
+    - green -vvv -s 1 gdwcalc
 
 tag_bundle:
   stage: tag_deploy
