@@ -18,7 +18,7 @@ pip-install:
   script:
     - python -m venv --clear %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
     - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    # Can't upgrade pip in place.
+    # Can't upgrade pip in place
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
     - python -m pip install --upgrade pip
     - pip install wafer_map
