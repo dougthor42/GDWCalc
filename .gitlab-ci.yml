@@ -1,10 +1,11 @@
 stages:
   - init
   - test
-  - cleanup
-  - tag_init
   - tag_deploy
-  - tag_cleanup
+  - cleanup
+
+variables:
+  VENV_ROOT: C:\temp\builds\
 
 # Set environment vars
 before_script:
@@ -14,9 +15,10 @@ before_script:
 pip-install:
   stage: init
   when: always
-  only:
-    - master
   script:
+    - python -m venv --clear %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - pip install --upgrade pip
     - pip install wafer_map
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
     - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
@@ -26,34 +28,9 @@ pip-install:
 tests:
   stage: test
   when: on_success
-  only:
-     - master
   script:
+    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - green -vvv gdwcalc
-
-clean-up:
-  stage: cleanup
-  when: always
-  only:
-    - master
-  script:
-    - pip uninstall wafer_map -y
-    - pip uninstall wxPython-Phoenix -y
-    - pip uninstall douglib -y
-    - pip uninstall green -y
-    - pip uninstall python-termstyle -y
-    - pip uninstall colour -y
-
-tag_pip-install:
-  stage: tag_init
-  when: always
-  only:
-    - tags
-  script:
-    - pip install wafer_map
-    - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
-    - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
-    - pip install colour
 
 tag_bundle:
   stage: tag_deploy
@@ -61,6 +38,7 @@ tag_bundle:
   only:
     - tags
   script:
+    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
@@ -68,13 +46,8 @@ tag_bundle:
       - build/exe.win-amd64-3.4/
       - dist/*.whl
 
-tag_clean-up:
-  stage: tag_cleanup
+clean-up:
+  stage: cleanup
   when: always
-  only:
-    - tags
   script:
-    - pip uninstall wafer_map -y
-    - pip uninstall wxPython-Phoenix -y
-    - pip uninstall douglib -y
-    - pip uninstall colour -y
+    - rd /S /Q %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
