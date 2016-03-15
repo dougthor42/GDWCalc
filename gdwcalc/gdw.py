@@ -235,16 +235,16 @@ def flat_location(dia):
     return flat_y
 
 
-def gdw(dieSize, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
+def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     """
-    Calculates Gross Die per Wafer (GDW) for a given dieSize,
+    Calculates Gross Die per Wafer (GDW) for a given die_size,
     wafer diameter, center_offset, and exclusion width (mm).
 
     Returns a list of tuples ``(x_grid, y_grid, x_coord, y_coord, die_status)``
 
     Parameters:
     -----------
-    dieSize : list or tuple of numerics, length 2
+    die_size : list or tuple of numerics, length 2
         The die (x, y) size in mm.
 
     dia : int or float
@@ -278,13 +278,13 @@ def gdw(dieSize, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
         'wafer', 'flat', 'excl', 'flatExcl', 'probe'
     """
 
-    wafer = Wafer(dieSize, center_offset, dia, excl, flat_excl)
+    wafer = Wafer(die_size, center_offset, dia, excl, flat_excl)
 
     wafer.x_offset = 0
-    wafer.y_offset= 0
+    wafer.y_offset = 0
     if center_offset[0] == "even":
         # offset the dieCenter by 1/2 the die size, X direction
-        wafer.x_offset= 0.5
+        wafer.x_offset = 0.5
     if center_offset[1] == "even":
         # offset the dieCenter by 1/2 the die size, Y direction
         wafer.y_offset = 0.5
@@ -336,10 +336,9 @@ def gdw(dieSize, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     return (grid_points, wafer.grid_center_xy)
 
 
-# TODO: Update this and 'gdw' function so that I don't have code duplication
-def gdw_fo(dieSize, dia, fo, excl=5, flat_excl=5):
+def gdw_fo(die_size, dia, fo, excl=5, flat_excl=5):
     """
-    Calculates Gross Die per Wafer (GDW) for a given dieSize (X, Y),
+    Calculates Gross Die per Wafer (GDW) for a given die_size (X, Y),
     wafer diameter dia, center fixed offset (fo), and exclusion width (mm).
 
     Returns a list of tuples (xCol, yRow, xCoord, yCoord, dieStatus)
@@ -350,10 +349,10 @@ def gdw_fo(dieSize, dia, fo, excl=5, flat_excl=5):
     DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
     """
     warnings.warn("Use `gdw` function instead", PendingDeprecationWarning)
-    return gdw(dieSize, dia, fo, excl, flat_excl)
+    return gdw(die_size, dia, fo, excl, flat_excl)
 
 
-def maxGDW(dieSize, dia, excl, fssExcl):
+def maxGDW(die_size, dia, excl, fssExcl):
     """
 
     returns list of tuples of (xCol, yRow, xCoord, yCoord, dieStatus)
@@ -361,7 +360,7 @@ def maxGDW(dieSize, dia, excl, fssExcl):
 
     Parameters:
     -----------
-    dieSize : tuple
+    die_size : tuple
         Tuple of (die_x, die_y) sizes. Values are floats in mm.
 
     dia : int?
@@ -399,7 +398,7 @@ def maxGDW(dieSize, dia, excl, fssExcl):
         edgeCount = 0
         flatCount = 0
         flatExclCount = 0
-        dieList, grid_center = gdw(dieSize, dia, shift, excl, fssExcl)
+        dieList, grid_center = gdw(die_size, dia, shift, excl, fssExcl)
         for die in dieList:
             if die[-1] == "probe":
                 probeCount += 1
@@ -436,7 +435,7 @@ def maxGDW(dieSize, dia, excl, fssExcl):
     return (probeList, gridCenter)
 
 
-def plotGDW(dieList, dieSize, dia, excl, fssExcl, grid_center):
+def plotGDW(dieList, die_size, dia, excl, fssExcl, grid_center):
     """
     Plots up a wafer map of dieList, coloring based on the bin the die
     die belongs to.
@@ -451,7 +450,7 @@ def plotGDW(dieList, dieSize, dia, excl, fssExcl, grid_center):
     dia, excl, and fssExcl are in mm.
     """
     wm_app.WaferMapApp(dieList,
-                       dieSize,
+                       die_size,
                        grid_center,
                        dia,
                        excl,
@@ -581,21 +580,21 @@ def die_to_radius(rc_coord, die_size):
 
 def example_gdw_calc():
     print("Running example GDW Calculation...")
-    dieSize = (5.02, 8.49)
+    die_size = (5.02, 8.49)
     dia = 150
     excl = 4.5
     fssExcl = 4.5
-    dielist, grid_center = maxGDW(dieSize, dia, excl, fssExcl)
+    dielist, grid_center = maxGDW(die_size, dia, excl, fssExcl)
     grid_center = (30.5, 27.5)
     grid_center = (14.3386, 8.5589)
     coord_list = [(i[0]+grid_center[0], i[1]+grid_center[1], i[4])
                   for i in dielist]
 
-    plotGDW(coord_list, dieSize, dia, excl, fssExcl, grid_center)
+    plotGDW(coord_list, die_size, dia, excl, fssExcl, grid_center)
     print(dielist[1])
     import douglib.prompts as prompts
     if prompts.y_n("Generate OWT Map File? "):
-        gen_mask_file(dielist, "MDH00", dieSize, dia)
+        gen_mask_file(dielist, "MDH00", die_size, dia)
 
 if __name__ == "__main__":
     print("This file is not meant to be run as a module.")
