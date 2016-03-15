@@ -235,6 +235,50 @@ def flat_location(dia):
     return flat_y
 
 
+def calc_die_state(wafer, x_coord, y_coord):
+    """
+
+    """
+    # Calculate the die center coordinates
+    coord_die_center_x = wafer.die_x * (x_coord - wafer.grid_center_x)
+    # we have to reverse the y coord, hence why it's
+    #    ``wafer.grid_center_y - y_coord`` and not
+    #    ``y_coord - wafer.grid_center_y``
+    coord_die_center_y = wafer.die_y * (wafer.grid_center_y - y_coord)
+    coord_die_center = (coord_die_center_x, coord_die_center_y)
+
+    # Find the die's furthest point
+    die_max_sqrd = max_dist_sqrd(coord_die_center, wafer.die_xy)
+
+    # Determine the die's lower-left corner (since that's the orgin for wx).
+    coord_lower_left_x = coord_die_center_x - wafer.die_x/2
+    coord_lower_left_y = coord_die_center_y - wafer.die_y/2
+
+    # Classify the die
+    if die_max_sqrd > wafer.rad**2:
+        # it's off the wafer, don't add to list.
+        status = "wafer"
+    elif coord_lower_left_y < wafer.flat_y:
+        # it's off the flat
+        status = "flat"
+    elif die_max_sqrd > wafer.excl_rad_sqrd:
+        # it's outside of the exclusion
+        status = "excl"
+    elif coord_lower_left_y < (wafer.flat_y + wafer.flat_excl):
+        # it's ouside the flat exclusion
+        status = "flatExcl"
+    else:
+        # it's a good die, add it to the list
+        status = "probe"
+
+    return (x_coord,
+            y_coord,
+            coord_lower_left_x,
+            coord_lower_left_y,
+            status,
+            )
+
+
 def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     """
     Calculates Gross Die per Wafer (GDW) for a given die_size,
@@ -251,7 +295,7 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
         The wafer diameter in mm.
 
     center_offset : list or tuple of length 2.
-        (x, y) offset in mm from the die origin (lower-left corner).
+        (x, y) offset in mm from the die center.
         Alternatively, may be set to ('odd', 'odd'), ('odd', even'),
         ('even', 'odd'), or ('even', 'even')
 
@@ -294,44 +338,13 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
         wafer.x_offset = center_offset[1] / wafer.die_x
         wafer.y_offset = center_offset[0] / wafer.die_y
 
-    # This could be more efficient
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            coord_die_center_x = wafer.die_x * (_x - wafer.grid_center_x)
-            # we have to reverse the y coord, hence why it's
-            # ``wafer.grid_center_y - _y`` and not ``_y - wafer.grid_center_y``
-            coord_die_center_y = wafer.die_y * (wafer.grid_center_y - _y)
-            coord_die_center = (coord_die_center_x, coord_die_center_y)
-            center_rad_sqrd = coord_die_center_x**2 + coord_die_center_y**2
-            die_max_sqrd = max_dist_sqrd(coord_die_center, wafer.die_xy)
-            coord_lower_left_x = coord_die_center_x - wafer.die_x/2
-            coord_lower_left_y = coord_die_center_y - wafer.die_y/2
-#            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
-
-            if die_max_sqrd > wafer.rad**2:
-                # it's off the wafer, don't add to list.
-                status = "wafer"
+            die = calc_die_state(wafer, _x, _y)
+            if die[4] == 'wafer':
                 continue
-            elif coord_lower_left_y < wafer.flat_y:
-                # it's off the flat
-                status = "flat"
-            elif die_max_sqrd > wafer.excl_rad_sqrd:
-                # it's outside of the exclusion
-                status = "excl"
-            elif coord_lower_left_y < (wafer.flat_y + wafer.flat_excl):
-                # it's ouside the flat exclusion
-                status = "flatExcl"
-            else:
-                # it's a good die, add it to the list
-                status = "probe"
-
-            grid_points.append((_x,
-                                _y,
-                                coord_lower_left_x,
-                                coord_lower_left_y,
-                                status,
-                                ))
+            grid_points.append(die)
 
     return (grid_points, wafer.grid_center_xy)
 
