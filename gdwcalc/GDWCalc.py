@@ -24,7 +24,6 @@ import math
 import os
 
 # Third Party
-import douglib.gdw as gdw
 import numpy as np
 import wafer_map.wm_core as wm_core
 import wafer_map.wm_info as wm_info
@@ -34,20 +33,20 @@ import wx.lib.plot as wxplot
 # Package / Application
 try:
     # Imports used for unittests
-#    from . import sibling_module
+    from . import gdw
     from . import (__version__,
                    __released__,
                    )
 except (SystemError, ValueError):
     try:
         # Imports used by Spyder
-#        import sibling_module
+        import gdw
         from __init__ import (__version__,
                               __released__,
                               )
     except ImportError:
          # Imports used by cx_freeze
-#        from package import sibling_module
+        from package import gdw
         from gdwcalc import (__version__,
                              __released__,
                              )

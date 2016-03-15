@@ -48,7 +48,6 @@ setup(
         "Topic :: Utilities",
         ],
     requires=["wxPython",
-              "douglib",
               "wafer_map"
               ],
 )
