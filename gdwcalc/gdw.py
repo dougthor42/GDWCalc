@@ -29,6 +29,33 @@ FLAT_LENGTHS = {50: 15.88, 75: 22.22, 100: 32.5, 125: 42.5, 150: 57.5}
 
 
 # ---------------------------------------------------------------------------
+### Classes
+# ---------------------------------------------------------------------------
+class Wafer(object):
+    """
+    """
+    def __init__(self, dia=150, excl=4.5, ffs_excl=4.5, scribe_y=70.2):
+        self._dia = dia
+        self._excl = excl
+        self._flat_excl = ffs_excl
+        self._scribe_y = scribe_y
+        self.flat_y = flat_location(self.dia)
+        self.center_grid = None
+
+    @property
+    def dia(self):
+        return self._dia
+
+    @dia.setter
+    def dia(self, value):
+        self._dia = value
+
+    @property
+    def rad(self):
+        return self.dia / 2
+
+
+# ---------------------------------------------------------------------------
 ### Functions
 # ---------------------------------------------------------------------------
 def max_dist_sqrd(center, size):
