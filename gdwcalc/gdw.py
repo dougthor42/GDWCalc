@@ -71,6 +71,14 @@ class Wafer(object):
         return (self.dia/2)**2 + (self.excl**2) - (self.dia * self.excl)
 
     @property
+    def die_xy(self):
+        return self._die_xy
+
+    @die_xy.setter
+    def die_xy(self, value):
+        raise NotImplementedError
+
+    @property
     def die_x(self):
         return self.die_xy[0]
 
@@ -226,11 +234,6 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
 
     die_x, die_y = dieSize
 
-    # 1. Generate square grid guarenteed to cover entire wafer
-    #    We'll use 2x the wafer dia so that we can move center around a bit
-    grid_max_x = 2 * int(math.ceil(dia / die_x))
-    grid_max_y = 2 * int(math.ceil(dia / die_y))
-
     x_offset = 0
     y_offset = 0
     if centerType[0] == "even":
@@ -240,12 +243,12 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
         # offset the dieCenter by 1/2 the die size, Y direction
         y_offset = 0.5
 #    global grid_center
-    grid_center = (grid_max_x/2 + x_offset, grid_max_y/2 + y_offset)
+    grid_center = (wafer.grid_max_x/2 + x_offset, wafer.grid_max_y/2 + y_offset)
 
     # This could be more efficient
     grid_points = []
-    for _x in range(1, grid_max_x):
-        for _y in range(1, grid_max_y):
+    for _x in range(1, wafer.grid_max_x):
+        for _y in range(1, wafer.grid_max_y):
             coord_die_center_x = die_x * (_x - grid_center[0])
             # we have to reverse the y coord, hence why it's
             # ``grid_center[1] - _y`` and not ``_y - grid_center[1]``
@@ -299,21 +302,16 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
 
     die_x, die_y = dieSize
 
-    # 1. Generate square grid guarenteed to cover entire wafer
-    #    We'll use 2x the wafer dia so that we can move center around a bit
-    grid_max_x = 2 * int(math.ceil(dia / die_x))
-    grid_max_y = 2 * int(math.ceil(dia / die_y))
-
     # convert the fixed offset to a die %age
     x_offset = fo[1] / dieSize[0]
     y_offset = fo[0] / dieSize[1]
     # global grid_center
-    grid_center = (grid_max_x/2 + x_offset, grid_max_y/2 + y_offset)
+    grid_center = (wafer.grid_max_x/2 + x_offset, wafer.grid_max_y/2 + y_offset)
 
     # This could be more efficient
     grid_points = []
-    for _x in range(1, grid_max_x):
-        for _y in range(1, grid_max_y):
+    for _x in range(1, wafer.grid_max_x):
+        for _y in range(1, wafer.grid_max_y):
             coord_die_center_x = die_x * (_x - grid_center[0])
             # we have to reverse the y coord, hence why it's
             # ``grid_center[1] - _y`` and not ``_y - grid_center[1]``
