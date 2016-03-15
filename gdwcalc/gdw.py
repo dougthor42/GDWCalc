@@ -35,12 +35,12 @@ class Wafer(object):
     """
     """
     def __init__(self, die_xy, center_offset,
-                 dia=150, excl=4.5, ffs_excl=4.5, scribe_y=70.2):
+                 dia=150, excl=4.5, fss_excl=4.5, scribe_y=70.2):
         self._die_xy = die_xy
         self._center_offset = center_offset
         self._dia = dia
         self._excl = excl
-        self._flat_excl = ffs_excl
+        self._flat_excl = fss_excl
         self._scribe_y = scribe_y
 
         self._flat_y = flat_location(self.dia)
@@ -222,14 +222,9 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
     DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
     """
 
+    wafer = Wafer(dieSize, centerType, dia, excl, fss_excl)
+
     die_x, die_y = dieSize
-    rad = dia/2
-
-    # Determine where our wafer edge is for the flat area
-    flat_y = flat_location(dia)
-
-    # calculate the exclusion radius^2
-    excl_sqrd = (dia/2)**2 + (excl**2) - (dia * excl)
 
     # 1. Generate square grid guarenteed to cover entire wafer
     #    We'll use 2x the wafer dia so that we can move center around a bit
@@ -261,17 +256,17 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
             coord_lower_left_x = coord_die_center_x - die_x/2
             coord_lower_left_y = coord_die_center_y - die_y/2
 #            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
-            if die_max_sqrd > rad**2:
+            if die_max_sqrd > wafer.rad**2:
                 # it's off the wafer, don't add to list.
                 status = "wafer"
                 continue
-            elif coord_lower_left_y < flat_y:
+            elif coord_lower_left_y < wafer.flat_y:
                 # it's off the flat
                 status = "flat"
-            elif die_max_sqrd > excl_sqrd:
+            elif die_max_sqrd > wafer.excl_rad_sqrd:
                 # it's outside of the exclusion
                 status = "excl"
-            elif coord_lower_left_y < (flat_y + fss_excl):
+            elif coord_lower_left_y < (wafer.flat_y + fss_excl):
                 # it's ouside the flat exclusion
                 status = "flatExcl"
             else:
@@ -300,15 +295,9 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     values for dieStatus are"
     DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
     """
+    wafer = Wafer(dieSize, fo, dia, excl, fss_excl)
 
     die_x, die_y = dieSize
-    rad = dia/2
-
-    # Determine where our wafer edge is for the flat area
-    flat_y = flat_location(dia)
-
-    # calculate the exclusion radius^2
-    excl_sqrd = (dia/2)**2 + (excl**2) - (dia * excl)
 
     # 1. Generate square grid guarenteed to cover entire wafer
     #    We'll use 2x the wafer dia so that we can move center around a bit
@@ -335,17 +324,17 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
             coord_lower_left_x = coord_die_center_x - die_x/2
             coord_lower_left_y = coord_die_center_y - die_y/2
 #            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
-            if die_max_sqrd > rad**2:
+            if die_max_sqrd > wafer.rad**2:
                 # it's off the wafer, don't add to list.
                 status = "wafer"
                 continue
-            elif coord_lower_left_y < flat_y:
+            elif coord_lower_left_y < wafer.flat_y:
                 # it's off the flat
                 status = "flat"
-            elif die_max_sqrd > excl_sqrd:
+            elif die_max_sqrd > wafer.excl_rad_sqrd:
                 # it's outside of the exclusion
                 status = "excl"
-            elif coord_lower_left_y < (flat_y + fss_excl):
+            elif coord_lower_left_y < (wafer.flat_y + fss_excl):
                 # it's ouside the flat exclusion
                 status = "flatExcl"
             else:
