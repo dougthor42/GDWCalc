@@ -76,6 +76,29 @@ def max_dist_sqrd(center, size):
     dist = (center[0] + half_x)**2 + (center[1] + half_y)**2
     return dist
 
+
+def flat_location(dia):
+    """
+    Returns the flat's y location wrt to wafer center for a given diameter.
+
+    Parameters:
+    -----------
+    dia : int or float
+        The wafer diameter in mm.
+
+    Returns:
+    --------
+    flat_y : float
+        The flat Y location with respect to the wafer center.
+    """
+    flat_y = -dia/2     # assume wafer edge at first
+    if dia in FLAT_LENGTHS:
+        # A flat is defined by SEMI M1-0302, so we calcualte where it is
+        flat_y = -math.sqrt((dia/2)**2 - (FLAT_LENGTHS[dia] * 0.5)**2)
+
+    return flat_y
+
+
 def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
     """
     Calculates Gross Die per Wafer (GDW) for a given dieSize (X, Y),
@@ -93,10 +116,7 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
     rad = dia/2
 
     # Determine where our wafer edge is for the flat area
-    flat_y = -dia/2     # assume wafer edge at first
-    if dia in FLAT_LENGTHS:
-        # A flat is defined by SEMI M1-0302, so we calcualte where it is
-        flat_y = -math.sqrt((dia/2)**2 - (FLAT_LENGTHS[dia] * 0.5)**2)
+    flat_y = flat_location(dia)
 
     # calculate the exclusion radius^2
     excl_sqrd = (dia/2)**2 + (excl**2) - (dia * excl)
@@ -175,10 +195,7 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     rad = dia/2
 
     # Determine where our wafer edge is for the flat area
-    flat_y = -dia/2     # assume wafer edge at first
-    if dia in FLAT_LENGTHS:
-        # A flat is defined by SEMI M1-0302, so we calcualte where it is
-        flat_y = -math.sqrt((dia/2)**2 - (FLAT_LENGTHS[dia] * 0.5)**2)
+    flat_y = flat_location(dia)
 
     # calculate the exclusion radius^2
     excl_sqrd = (dia/2)**2 + (excl**2) - (dia * excl)
