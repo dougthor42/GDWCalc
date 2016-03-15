@@ -234,8 +234,6 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
 
     wafer = Wafer(dieSize, centerType, dia, excl, fss_excl)
 
-    die_x, die_y = dieSize
-
     wafer.x_offset = 0
     wafer.y_offset= 0
     if centerType[0] == "even":
@@ -249,15 +247,15 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            coord_die_center_x = die_x * (_x - wafer.grid_center_x)
+            coord_die_center_x = wafer.die_x * (_x - wafer.grid_center_x)
             # we have to reverse the y coord, hence why it's
             # ``wafer.grid_center_y - _y`` and not ``_y - wafer.grid_center_y``
-            coord_die_center_y = die_y * (wafer.grid_center_y - _y)
+            coord_die_center_y = wafer.die_y * (wafer.grid_center_y - _y)
             coord_die_center = (coord_die_center_x, coord_die_center_y)
             center_rad_sqrd = coord_die_center_x**2 + coord_die_center_y**2
-            die_max_sqrd = max_dist_sqrd(coord_die_center, dieSize)
-            coord_lower_left_x = coord_die_center_x - die_x/2
-            coord_lower_left_y = coord_die_center_y - die_y/2
+            die_max_sqrd = max_dist_sqrd(coord_die_center, wafer.die_xy)
+            coord_lower_left_x = coord_die_center_x - wafer.die_x/2
+            coord_lower_left_y = coord_die_center_y - wafer.die_y/2
 #            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
             if die_max_sqrd > wafer.rad**2:
                 # it's off the wafer, don't add to list.
@@ -300,25 +298,23 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     """
     wafer = Wafer(dieSize, fo, dia, excl, fss_excl)
 
-    die_x, die_y = dieSize
-
     # convert the fixed offset to a die %age
-    wafer.x_offset = fo[1] / dieSize[0]
-    wafer.y_offset = fo[0] / dieSize[1]
+    wafer.x_offset = fo[1] / wafer.die_x
+    wafer.y_offset = fo[0] / wafer.die_y
 
     # This could be more efficient
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            coord_die_center_x = die_x * (_x - wafer.grid_center_x)
+            coord_die_center_x = wafer.die_x * (_x - wafer.grid_center_x)
             # we have to reverse the y coord, hence why it's
             # ``wafer.grid_center_y - _y`` and not ``_y - wafer.grid_center_y``
-            coord_die_center_y = die_y * (wafer.grid_center_y - _y)
+            coord_die_center_y = wafer.die_y * (wafer.grid_center_y - _y)
             coord_die_center = (coord_die_center_x, coord_die_center_y)
             center_rad_sqrd = coord_die_center_x**2 + coord_die_center_y**2
-            die_max_sqrd = max_dist_sqrd(coord_die_center, dieSize)
-            coord_lower_left_x = coord_die_center_x - die_x/2
-            coord_lower_left_y = coord_die_center_y - die_y/2
+            die_max_sqrd = max_dist_sqrd(coord_die_center, wafer.die_xy)
+            coord_lower_left_x = coord_die_center_x - wafer.die_x/2
+            coord_lower_left_y = coord_die_center_y - wafer.die_y/2
 #            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
             if die_max_sqrd > wafer.rad**2:
                 # it's off the wafer, don't add to list.
