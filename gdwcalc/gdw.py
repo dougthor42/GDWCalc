@@ -36,12 +36,12 @@ class Wafer(object):
     """
     """
     def __init__(self, die_xy, center_offset,
-                 dia=150, excl=4.5, fss_excl=4.5, scribe_y=70.2):
+                 dia=150, excl=4.5, flat_excl=4.5, scribe_y=70.2):
         self._die_xy = die_xy
         self._center_offset = center_offset
         self._dia = dia
         self._excl = excl
-        self._flat_excl = fss_excl
+        self._flat_excl = flat_excl
         self._scribe_y = scribe_y
 
         self._flat_y = flat_location(self.dia)
@@ -66,6 +66,10 @@ class Wafer(object):
     @excl.setter
     def excl(self, value):
         self._excl = value
+
+    @property
+    def flat_excl(self):
+        return self._flat_excl
 
     @property
     def excl_rad_sqrd(self):
@@ -149,6 +153,17 @@ class Wafer(object):
         return (self.grid_center_x, self.grid_center_y)
 
 
+class Die(object):
+    """
+    """
+    def __init__(self, x_grid, y_grid, x_coord, y_coord, state):
+        self.x_grid = x_grid
+        self.y_grid = y_grid
+        self.x_coord = x_coord
+        self.y_coord = y_coord
+        self.state = state
+
+
 # ---------------------------------------------------------------------------
 ### Functions
 # ---------------------------------------------------------------------------
@@ -220,34 +235,64 @@ def flat_location(dia):
     return flat_y
 
 
-def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
+def gdw(dieSize, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     """
-    Calculates Gross Die per Wafer (GDW) for a given dieSize (X, Y),
-    wafer diameter dia, centerType (xType, yType), and exclusion width (mm).
+    Calculates Gross Die per Wafer (GDW) for a given dieSize,
+    wafer diameter, center_offset, and exclusion width (mm).
 
-    Returns a list of tuples (xCol, yRow, xCoord, yCoord, dieStatus)
+    Returns a list of tuples ``(x_grid, y_grid, x_coord, y_coord, die_status)``
 
-    xCol and yRow are 1 indexed
+    Parameters:
+    -----------
+    dieSize : list or tuple of numerics, length 2
+        The die (x, y) size in mm.
 
-    values for dieStatus are"
-    DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
+    dia : int or float
+        The wafer diameter in mm.
+
+    center_offset : list or tuple of length 2.
+        (x, y) offset in mm from the die origin (lower-left corner).
+        Alternatively, may be set to ('odd', 'odd'), ('odd', even'),
+        ('even', 'odd'), or ('even', 'even')
+
+    excl : into or float
+        The wafer-edge exclusion distance in mm.
+
+    flat_excl : int or float
+        The flat exclusion distance in mm.
+
+    Returns:
+    --------
+    grid_points : list of tuples
+        The list of die that cover the wafer. Each die is defined by
+        a tuple of ``(x_grid, y_grid, x_coord, y_coord, die_status)``.
+
+    grid_center_xy : tuple of length 2
+        The wafer center in die grid coordinates.
+
+    Notes:
+    ------
+    + xCol and yRow are 1 indexed
+    + Possible values for `die_status` are::
+
+        'wafer', 'flat', 'excl', 'flatExcl', 'probe'
     """
 
-    wafer = Wafer(dieSize, centerType, dia, excl, fss_excl)
+    wafer = Wafer(dieSize, center_offset, dia, excl, flat_excl)
 
     wafer.x_offset = 0
     wafer.y_offset= 0
-    if centerType[0] == "even":
+    if center_offset[0] == "even":
         # offset the dieCenter by 1/2 the die size, X direction
         wafer.x_offset= 0.5
-    if centerType[1] == "even":
+    if center_offset[1] == "even":
         # offset the dieCenter by 1/2 the die size, Y direction
         wafer.y_offset = 0.5
 
     # convert the fixed offset to a die %age
-    if not all(i in ('odd', 'even') for i in centerType):
-        wafer.x_offset = centerType[1] / wafer.die_x
-        wafer.y_offset = centerType[0] / wafer.die_y
+    if not all(i in ('odd', 'even') for i in center_offset):
+        wafer.x_offset = center_offset[1] / wafer.die_x
+        wafer.y_offset = center_offset[0] / wafer.die_y
 
     # This could be more efficient
     grid_points = []
@@ -263,6 +308,7 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
             coord_lower_left_x = coord_die_center_x - wafer.die_x/2
             coord_lower_left_y = coord_die_center_y - wafer.die_y/2
 #            coord_lower_left = (coord_lower_left_x, coord_lower_left_y)
+
             if die_max_sqrd > wafer.rad**2:
                 # it's off the wafer, don't add to list.
                 status = "wafer"
@@ -273,12 +319,13 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
             elif die_max_sqrd > wafer.excl_rad_sqrd:
                 # it's outside of the exclusion
                 status = "excl"
-            elif coord_lower_left_y < (wafer.flat_y + fss_excl):
+            elif coord_lower_left_y < (wafer.flat_y + wafer.flat_excl):
                 # it's ouside the flat exclusion
                 status = "flatExcl"
             else:
                 # it's a good die, add it to the list
                 status = "probe"
+
             grid_points.append((_x,
                                 _y,
                                 coord_lower_left_x,
@@ -290,7 +337,7 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
 
 
 # TODO: Update this and 'gdw' function so that I don't have code duplication
-def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
+def gdw_fo(dieSize, dia, fo, excl=5, flat_excl=5):
     """
     Calculates Gross Die per Wafer (GDW) for a given dieSize (X, Y),
     wafer diameter dia, center fixed offset (fo), and exclusion width (mm).
@@ -303,7 +350,7 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
     """
     warnings.warn("Use `gdw` function instead", PendingDeprecationWarning)
-    return gdw(dieSize, dia, fo, excl, fss_excl)
+    return gdw(dieSize, dia, fo, excl, flat_excl)
 
 
 def maxGDW(dieSize, dia, excl, fssExcl):
