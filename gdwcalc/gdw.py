@@ -108,8 +108,9 @@ class Wafer(object):
 
     @x_offset.setter
     def x_offset(self, value):
-        if value not in ("even", "odd") or not isinstance(value, (float, int)):
-            raise TypeError("value must be 'odd', 'even', or a number.")
+        if value not in ("even", "odd") and not isinstance(value, (float, int)):
+            err_str = "Invalid value: `{}`. Value must be 'odd', 'even', or a number."
+            raise TypeError(err_str.format(value))
         self._x_offset = value
 
     @property
@@ -118,8 +119,9 @@ class Wafer(object):
 
     @y_offset.setter
     def y_offset(self, value):
-        if value not in ("even", "odd") or not isinstance(value, (float, int)):
-            raise TypeError("value must be 'odd', 'even', or a number.")
+        if value not in ("even", "odd") and not isinstance(value, (float, int)):
+            err_str = "Invalid value: `{}`. Value must be 'odd', 'even', or a number."
+            raise TypeError(err_str.format(value))
         self._y_offset = value
 
     @property
@@ -234,25 +236,23 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
 
     die_x, die_y = dieSize
 
-    x_offset = 0
-    y_offset = 0
+    wafer.x_offset = 0
+    wafer.y_offset= 0
     if centerType[0] == "even":
         # offset the dieCenter by 1/2 the die size, X direction
-        x_offset = 0.5
+        wafer.x_offset= 0.5
     if centerType[1] == "even":
         # offset the dieCenter by 1/2 the die size, Y direction
-        y_offset = 0.5
-#    global grid_center
-    grid_center = (wafer.grid_max_x/2 + x_offset, wafer.grid_max_y/2 + y_offset)
+        wafer.y_offset = 0.5
 
     # This could be more efficient
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            coord_die_center_x = die_x * (_x - grid_center[0])
+            coord_die_center_x = die_x * (_x - wafer.grid_center_x)
             # we have to reverse the y coord, hence why it's
-            # ``grid_center[1] - _y`` and not ``_y - grid_center[1]``
-            coord_die_center_y = die_y * (grid_center[1] - _y)
+            # ``wafer.grid_center_y - _y`` and not ``_y - wafer.grid_center_y``
+            coord_die_center_y = die_y * (wafer.grid_center_y - _y)
             coord_die_center = (coord_die_center_x, coord_die_center_y)
             center_rad_sqrd = coord_die_center_x**2 + coord_die_center_y**2
             die_max_sqrd = max_dist_sqrd(coord_die_center, dieSize)
@@ -282,7 +282,7 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
                                 status,
                                 ))
 
-    return (grid_points, grid_center)
+    return (grid_points, wafer.grid_center_xy)
 
 
 # TODO: Update this and 'gdw' function so that I don't have code duplication
@@ -303,19 +303,17 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     die_x, die_y = dieSize
 
     # convert the fixed offset to a die %age
-    x_offset = fo[1] / dieSize[0]
-    y_offset = fo[0] / dieSize[1]
-    # global grid_center
-    grid_center = (wafer.grid_max_x/2 + x_offset, wafer.grid_max_y/2 + y_offset)
+    wafer.x_offset = fo[1] / dieSize[0]
+    wafer.y_offset = fo[0] / dieSize[1]
 
     # This could be more efficient
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            coord_die_center_x = die_x * (_x - grid_center[0])
+            coord_die_center_x = die_x * (_x - wafer.grid_center_x)
             # we have to reverse the y coord, hence why it's
-            # ``grid_center[1] - _y`` and not ``_y - grid_center[1]``
-            coord_die_center_y = die_y * (grid_center[1] - _y)
+            # ``wafer.grid_center_y - _y`` and not ``_y - wafer.grid_center_y``
+            coord_die_center_y = die_y * (wafer.grid_center_y - _y)
             coord_die_center = (coord_die_center_x, coord_die_center_y)
             center_rad_sqrd = coord_die_center_x**2 + coord_die_center_y**2
             die_max_sqrd = max_dist_sqrd(coord_die_center, dieSize)
@@ -345,7 +343,7 @@ def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
                                 status,
                                 ))
 
-    return (grid_points, grid_center)
+    return (grid_points, wafer.grid_center_xy)
 
 
 def maxGDW(dieSize, dia, excl, fssExcl):
