@@ -16,6 +16,7 @@ pip-install:
   stage: init
   when: always
   script:
+    - echo Creating venv at `%VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%`
     - python -m venv --clear %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
     - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
@@ -32,7 +33,7 @@ tests:
   when: on_success
   script:
     - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    - green -vvv -s 1 gdwcalc
+    - python -m green -vvv -s 1 gdwcalc
 
 tag_bundle:
   stage: tag_deploy
