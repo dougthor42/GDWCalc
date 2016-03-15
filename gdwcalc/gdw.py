@@ -235,16 +235,41 @@ def flat_location(dia):
     return flat_y
 
 
-def calc_die_state(wafer, x_coord, y_coord):
+def calc_die_state(wafer, x_grid, y_grid):
     """
+    Calculates the state of a given die from its grid coordinates.
+
+    Paramters:
+    ----------
+    wafer : ``Wafer`` object
+        The ``Wafer`` to base calculations on
+
+    x_grid : int
+        The die x grid coordinate
+
+    y_grid : int
+        The die y grid coordinate
+
+    Returns:
+    --------
+    x_grid, y_grid : int
+        The die's grid coordinate.
+
+    coord_lower_left_x, coord_lower_left_y : float
+        The die's lower-left coordinate. Used for plotting, since wx uses
+        the lower-left corner as the rectangle origin.
+
+    status : string
+        The die status. Can be one of ``'wafer'``, ``'flat'``,
+        ``'excl'``, ``'flatExcl'``, or ``'probe'``
 
     """
     # Calculate the die center coordinates
-    coord_die_center_x = wafer.die_x * (x_coord - wafer.grid_center_x)
+    coord_die_center_x = wafer.die_x * (x_grid - wafer.grid_center_x)
     # we have to reverse the y coord, hence why it's
-    #    ``wafer.grid_center_y - y_coord`` and not
-    #    ``y_coord - wafer.grid_center_y``
-    coord_die_center_y = wafer.die_y * (wafer.grid_center_y - y_coord)
+    #    ``wafer.grid_center_y - y_grid`` and not
+    #    ``y_grid - wafer.grid_center_y``
+    coord_die_center_y = wafer.die_y * (wafer.grid_center_y - y_grid)
     coord_die_center = (coord_die_center_x, coord_die_center_y)
 
     # Find the die's furthest point
@@ -271,8 +296,8 @@ def calc_die_state(wafer, x_coord, y_coord):
         # it's a good die, add it to the list
         status = "probe"
 
-    return (x_coord,
-            y_coord,
+    return (x_grid,
+            y_grid,
             coord_lower_left_x,
             coord_lower_left_y,
             status,
