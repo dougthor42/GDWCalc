@@ -376,12 +376,12 @@ class MainPanel(wx.Panel):
 
         # If using fixed offsets, call other function.
         if self.fo_bool:
-            probe_list, self.center_xy = gdw.gdw_fo(self.die_xy,
-                                                    self.dia,
-                                                    self.fo,
-                                                    self.ee,
-                                                    self.fe,
-                                                    )
+            probe_list, self.center_xy = gdw.gdw(self.die_xy,
+                                                 self.dia,
+                                                 self.fo,
+                                                 self.ee,
+                                                 self.fe,
+                                                 )
 
         else:
             probe_list, self.center_xy = gdw.maxGDW(self.die_xy,
