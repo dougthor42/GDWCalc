@@ -156,6 +156,8 @@ class Wafer(object):
 class Die(object):
     """
     """
+    __slots__ = ['x_grid', 'y_grid', 'x_coord', 'y_coord', 'state']
+
     def __init__(self, x_grid, y_grid, x_coord, y_coord, state):
         self.x_grid = x_grid
         self.y_grid = y_grid
