@@ -34,13 +34,17 @@ FLAT_LENGTHS = {50: 15.88, 75: 22.22, 100: 32.5, 125: 42.5, 150: 57.5}
 class Wafer(object):
     """
     """
-    def __init__(self, dia=150, excl=4.5, ffs_excl=4.5, scribe_y=70.2):
+    def __init__(self, die_xy, center_offset,
+                 dia=150, excl=4.5, ffs_excl=4.5, scribe_y=70.2):
+        self._die_xy = die_xy
+        self._center_offset = center_offset
         self._dia = dia
         self._excl = excl
         self._flat_excl = ffs_excl
         self._scribe_y = scribe_y
-        self.flat_y = flat_location(self.dia)
-        self.center_grid = None
+
+        self._flat_y = flat_location(self.dia)
+        self._center_grid = None
 
     @property
     def dia(self):
@@ -53,6 +57,85 @@ class Wafer(object):
     @property
     def rad(self):
         return self.dia / 2
+
+    @property
+    def excl(self):
+        return self._excl
+
+    @excl.setter
+    def excl(self, value):
+        self._excl = value
+
+    @property
+    def excl_rad_sqrd(self):
+        return (self.dia/2)**2 + (self.excl**2) - (self.dia * self.excl)
+
+    @property
+    def die_x(self):
+        return self.die_xy[0]
+
+    @property
+    def die_y(self):
+        return self.die_xy[1]
+
+    @property
+    def flat_y(self):
+        return self._flat_y
+
+    @property
+    def grid_max_x(self):
+        return 2 * int(math.ceil(self.dia / self.die_x))
+
+    @property
+    def grid_max_y(self):
+        return 2 * int(math.ceil(self.dia / self.die_y))
+
+    @property
+    def grid_max_xy(self):
+        return (self.grid_max_x, self.grid_max_y)
+
+    @property
+    def x_offset(self):
+        return self._x_offset
+
+    @x_offset.setter
+    def x_offset(self, value):
+        if value not in ("even", "odd") or not isinstance(value, (float, int)):
+            raise TypeError("value must be 'odd', 'even', or a number.")
+        self._x_offset = value
+
+    @property
+    def y_offset(self):
+        return self._y_offset
+
+    @y_offset.setter
+    def y_offset(self, value):
+        if value not in ("even", "odd") or not isinstance(value, (float, int)):
+            raise TypeError("value must be 'odd', 'even', or a number.")
+        self._y_offset = value
+
+    @property
+    def center_offset(self):
+        return (self.x_offset, self.y_offset)
+
+    @center_offset.setter
+    def center_offset(self, value):
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            self.x_offset, self.y_offset = value
+        else:
+            raise TypeError("value must be a list or tuple of length 2.")
+
+    @property
+    def grid_center_x(self):
+        return self.grid_max_x/2 + self.x_offset
+
+    @property
+    def grid_center_y(self):
+        return self.grid_max_y/2 + self.y_offset
+
+    @property
+    def grid_center_xy(self):
+        return (self.grid_center_x, self.grid_center_y)
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +291,7 @@ def gdw(dieSize, dia, centerType=('odd', 'odd'), excl=5, fss_excl=5):
 def gdw_fo(dieSize, dia, fo, excl=5, fss_excl=5):
     """
     Calculates Gross Die per Wafer (GDW) for a given dieSize (X, Y),
-    wafer diameter dia, canter fixed offset (fo), and exclusion width (mm).
+    wafer diameter dia, center fixed offset (fo), and exclusion width (mm).
 
     Returns a list of tuples (xCol, yRow, xCoord, yCoord, dieStatus)
 
