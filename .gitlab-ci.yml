@@ -5,7 +5,7 @@ stages:
   - cleanup
 
 variables:
-  VENV_ROOT: C:\temp\builds\
+  VENV_ROOT: C:\temp\builds
 
 # Set environment vars
 before_script:
@@ -16,14 +16,13 @@ pip-install:
   stage: init
   when: always
   script:
-    - python -m venv --clear %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
-    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - python -m venv --clear %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
     - python -m pip install --upgrade pip
     - pip install wafer_map
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
-    - pip install build-reqs/douglib-1.0.10-py3-none-any.whl
     - pip install green
     - pip install colour
     - pip install numpy
@@ -32,7 +31,7 @@ tests:
   stage: test
   when: on_success
   script:
-    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - green -vvv -s 1 gdwcalc
 
 tag_bundle:
@@ -41,7 +40,7 @@ tag_bundle:
   only:
     - tags
   script:
-    - call %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
@@ -53,4 +52,4 @@ clean-up:
   stage: cleanup
   when: always
   script:
-    - rd /S /Q %VENV_ROOT%%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - rd /S /Q %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
