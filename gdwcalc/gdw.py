@@ -499,15 +499,15 @@ def plotGDW(dieList, die_size, dia, excl, fssExcl, grid_center):
                        )
 
 
-def gen_mask_file(probeList, maskName, dieXY, dia):
+def gen_mask_file(probe_list, mask_name, die_xy, dia, fixed_start_coord=False):
     """
     Generates a text file that can be read by the LabVIEW OWT program.
 
-    probeList should only contain die that are fully on the wafer. Die that
+    probe_list should only contain die that are fully on the wafer. Die that
     are within the edxlucion zones but still fully on the wafer *are*
     included.
 
-    probeList is what's returned from maxGDW, so it's a list of
+    probe_list is what's returned from maxGDW, so it's a list of
     (xCol, yRow, xCoord, yCoord, dieStatus) tuples
     """
 
@@ -516,89 +516,92 @@ def gen_mask_file(probeList, maskName, dieXY, dia):
     # 3. Append only the "probe" die to the die list.
     # 4. Finalize the file.
     path = os.path.join("\\\\hydrogen\\engineering\\\
-Software\\LabView\\OWT\\masks", maskName + ".ini")
+Software\\LabView\\OWT\\masks", mask_name + ".ini")
     print("Saving mask file data to:")
     print(path)
 
-    # this defines where (1, 1) actually is.
-    # TODO: Verify that "- 2" works for all cases
-    edge_R = min({i[1] for i in probeList if i[4] == 'excl'}) - 2
-    edge_C = min({i[0] for i in probeList if i[4] == 'excl'}) - 2
-    print("min(edge_R) = {}    min(edge_C) = {}".format(edge_R, edge_C))
+    # Auto-calculate the edge row and column
+    if not fixed_start_coord:
+        # Adjust the original data to the origin
+        # this defines where (1, 1) actually is.
+        # TODO: Verify that "- 2" works for all cases
+        edge_row = min({i[1] for i in probe_list if i[2] == 'excl'}) - 2
+        edge_col = min({i[0] for i in probe_list if i[2] == 'excl'}) - 2
+        print("edge_row = {}  edge_col = {}".format(edge_row, edge_col))
 
-    # Adjust the original data to the origin
-    for _i, _ in enumerate(probeList):
-        probeList[_i] = list(probeList[_i])
-        probeList[_i][0] -= edge_C
-        probeList[_i][1] -= edge_R
-        probeList[_i] = tuple(probeList[_i])
+        for _i, _ in enumerate(probe_list):
+            probe_list[_i] = list(probe_list[_i])
+            probe_list[_i][0] -= edge_col
+            probe_list[_i][1] -= edge_row
+            probe_list[_i] = tuple(probe_list[_i])
 
-    nRC = (max({i[1] for i in probeList}) + 1,
-           max({i[0] for i in probeList}) + 1)
-    print("nRC = {}".format(nRC))
+    n_rc = (max({i[1] for i in probe_list}) + 1,
+            max({i[0] for i in probe_list}) + 1)
+    print("n_rc = {}".format(n_rc))
 
     # create a list of every die
-    allDie = []
-    for row in range(1, nRC[0] + 1):        # Need +1 b/c end pt omitted
-        for col in range(1, nRC[1] + 1):    # Need +1 b/c end pt omitted
-            allDie.append((row, col))
+    all_die = []
+    for row in range(1, n_rc[0] + 1):        # Need +1 b/c end pt omitted
+        for col in range(1, n_rc[1] + 1):    # Need +1 b/c end pt omitted
+            all_die.append((row, col))
 
     # Note: I need list() so that I make copies of the data. Without it,
-    # all these things would be pointing to the same allDie object.
-    TestAllList = list(allDie)
-    edgeList = list(allDie)
-    everyList = list(allDie)
+    # all these things would be pointing to the same all_die object.
+    test_all_list = list(all_die)
+    edge_list = list(all_die)
+    every_list = list(all_die)
     die_to_probe = []
 
     # This algorithm is crap, but it works.
     # Create the exclusion list to add to the OWT file.
     # NOTE: I SWITCH FROM XY to RC HERE!
-    for item in probeList:
+    for item in probe_list:
         _rc = (item[1], item[0])
-        _state = item[4]
+        _state = item[2]
         try:
             if _state == "probe":
-                TestAllList.remove(_rc)
+                test_all_list.remove(_rc)
                 die_to_probe.append(_rc)
             if _state in ("excl", "flatExcl", "probe"):
-                everyList.remove(_rc)
+                every_list.remove(_rc)
             if _state in ("excl", "flatExcl"):
-                edgeList.remove(_rc)
+                edge_list.remove(_rc)
         except ValueError:
-            print(_rc, _state)
-            raise
+#            print(_rc, _state)
+#            raise
+            continue
 
     # Determine the starting RC - this will be the min row, min column that
     # as a "probe" value. However, since the GDW algorithm now puts the
     # origin somewhere far off the wafer, we need to adjust the values a bit.
-    minR = min(i[0] for i in die_to_probe)
-    minC = min(i[1] for i in die_to_probe if i[0] == minR)
-    startRC = (minR, minC)
-    print("Landing Die: {}".format(startRC))
+    min_row = min(i[0] for i in die_to_probe)
+    min_col = min(i[1] for i in die_to_probe if i[0] == min_row)
+    start_rc = (min_row, min_col)
+    print("Landing Die: {}".format(start_rc))
 
-    TestAllString = ''.join(["%s,%s; " % (i[0], i[1]) for i in TestAllList])
-    edgeString = ''.join(["%s,%s; " % (i[0], i[1]) for i in edgeList])
-    everyString = ''.join(["%s,%s; " % (i[0], i[1]) for i in everyList])
+    test_all_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in test_all_list])
+    edge_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in edge_list])
+    every_string = ''.join(["%s,%s; " % (i[0], i[1]) for i in every_list])
 
-    homeRC = (1, 1)                         # Static value
+    home_rc = (1, 1)                         # Static value
 
     with open(path, 'w') as openf:
         openf.write("[Mask]\n")
-        openf.write("Mask = \"%s\"\n" % maskName)
-        openf.write("Die X = %f\n" % dieXY[0])
-        openf.write("Die Y = %f\n" % dieXY[1])
+        openf.write("Mask = \"%s\"\n" % mask_name)
+        openf.write("Die X = %f\n" % die_xy[0])
+        openf.write("Die Y = %f\n" % die_xy[1])
         openf.write("Flat = 0\n")                   # always 0
         openf.write("\n")
         openf.write("[%dmm]\n" % dia)
-        openf.write("Rows = %d\n" % nRC[0])
-        openf.write("Cols = %d\n" % nRC[1])
-        openf.write("Home Row = %d\n" % homeRC[0])
-        openf.write("Home Col = %d\n" % homeRC[1])
-        openf.write("Start Row = %d\n" % startRC[0])
-        openf.write("Start Col = %d\n" % startRC[1])
-        openf.write("Every = \"" + everyString[:-2] + "\"\n")
-        openf.write("TestAll = \"" + TestAllString[:-2] + "\"\n")
-        openf.write("Edge Inking = \"" + edgeString[:-2] + "\"\n")
+        openf.write("Rows = %d\n" % n_rc[0])
+        openf.write("Cols = %d\n" % n_rc[1])
+        openf.write("Home Row = %d\n" % home_rc[0])
+        openf.write("Home Col = %d\n" % home_rc[1])
+        openf.write("Start Row = %d\n" % start_rc[0])
+        openf.write("Start Col = %d\n" % start_rc[1])
+        openf.write("Every = \"" + every_string[:-2] + "\"\n")
+        openf.write("TestAll = \"" + test_all_string[:-2] + "\"\n")
+        openf.write("Edge Inking = \"" + edge_string[:-2] + "\"\n")
         openf.write("\n[Devices]\n")
         openf.write("PCM = \"0.2,0,0,,T\"\n")
 
