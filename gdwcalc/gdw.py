@@ -362,8 +362,8 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
 
     # convert the fixed offset to a die %age
     if not all(i in ('odd', 'even') for i in center_offset):
-        wafer.x_offset = center_offset[1] / wafer.die_x
-        wafer.y_offset = center_offset[0] / wafer.die_y
+        wafer.x_offset = center_offset[0] / wafer.die_x
+        wafer.y_offset = center_offset[1] / wafer.die_y
 
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
