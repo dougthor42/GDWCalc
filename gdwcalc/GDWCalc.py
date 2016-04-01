@@ -45,7 +45,7 @@ except (SystemError, ValueError):
                               )
     except ImportError:
          # Imports used by cx_freeze
-        from package import gdw
+        from gdwcalc import gdw
         from gdwcalc import (__version__,
                              __released__,
                              )
