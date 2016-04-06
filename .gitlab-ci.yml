@@ -16,9 +16,9 @@ pip-install:
   stage: init
   when: always
   script:
-    - echo Creating venv at `%VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%`
-    - python -m venv --clear %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
-    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - echo Creating venv at `%VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%`
+    - python -m venv --clear %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
     - python -m pip install pip==8.1.0
@@ -33,7 +33,7 @@ tests:
   stage: test
   when: on_success
   script:
-    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python -m green -vvv -s 1 -W gdwcalc
 
 tag_bundle:
@@ -42,7 +42,7 @@ tag_bundle:
   only:
     - tags
   script:
-    - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
@@ -54,4 +54,4 @@ clean-up:
   stage: cleanup
   when: always
   script:
-    - rd /S /Q %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - rd /S /Q %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
