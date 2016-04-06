@@ -21,19 +21,20 @@ pip-install:
     - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
-    - python -m pip install --upgrade pip
+    - python -m pip install -I pip==8.1.0
     - pip install wafer_map
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
     - pip install green
     - pip install colour
     - pip install numpy
+#    - pip install hypothesis
 
 tests:
   stage: test
   when: on_success
   script:
     - call %VENV_ROOT%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    - python -m green -vvv -s 1 gdwcalc
+    - python -m green -vvv -s 1 -W gdwcalc
 
 tag_bundle:
   stage: tag_deploy
