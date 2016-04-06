@@ -21,12 +21,12 @@ pip-install:
     - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
-    - python -m pip install pip==8.1.0
-    - pip install wafer_map
+    - python -m pip install pip==8.1.0 --no-cache-dir
+    - pip install wafer_map --no-cache-dir
     - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
-    - pip install green
-    - pip install colour
-    - pip install numpy
+    - pip install green --no-cache-dir
+    - pip install colour --no-cache-dir
+    - pip install numpy --no-cache-dir
 #    - pip install hypothesis
 
 tests:
