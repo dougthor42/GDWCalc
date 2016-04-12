@@ -475,6 +475,13 @@ class StaticTextResult(wx.Panel):
 
     @value.setter
     def value(self, val):
+        if isinstance(val, (float, int)):
+            val = "{:>.8g}".format(val)
+        elif isinstance(val, str):
+            pass
+        else:
+            raise TypeError("Value must be a string, int, or float")
+
         self._value.SetLabel(val)
 
 
@@ -827,28 +834,28 @@ class MainPanel(wx.Panel):
         new_radius_data = list(math.sqrt(item) for item in radius_sqrd_data)
         self.histograms.update(new_radius_data)
 
-        self.results.gdw_result.value = str(self.gdw)
-        self.results.ee_loss_result.value = str(self.ee_loss)
-        self.results.flat_loss_result.value = str(self.flat_loss)
-        self.results.fe_loss_result.value = str(self.fe_loss)
-        self.results.scribe_loss_result.value = str(self.scribe_loss)
+        self.results.gdw_result.value = self.gdw
+        self.results.ee_loss_result.value = self.ee_loss
+        self.results.flat_loss_result.value = self.flat_loss
+        self.results.fe_loss_result.value = self.fe_loss
+        self.results.scribe_loss_result.value = self.scribe_loss
 
         self.x_offset = self.center_xy[0] % 1
         if self.x_offset == 0:
             self.x_offset = "0 (odd)".format(self.x_offset)
         else:
             self.x_offset = "0.5 (even)".format(self.x_offset)
-        self.results.shape_x_result.value = str(self.x_offset)
+        self.results.shape_x_result.value = self.x_offset
 
         self.y_offset = self.center_xy[1] % 1
         if self.y_offset == 0:
             self.y_offset = "0 (odd)".format(self.y_offset)
         else:
             self.y_offset = "0.5 (even)".format(self.y_offset)
-        self.results.shape_y_result.value = str(self.y_offset)
+        self.results.shape_y_result.value = self.y_offset
 
-        self.results.center_x_result.value = str(self.center_xy[0])
-        self.results.center_y_result.value = str(self.center_xy[1])
+        self.results.center_x_result.value = self.center_xy[0]
+        self.results.center_y_result.value = self.center_xy[1]
 
         # Update the screen
         self.Refresh()
