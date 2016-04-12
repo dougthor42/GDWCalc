@@ -112,7 +112,7 @@ class MainFrame(wx.Frame):
         self.CreateStatusBar()
 
         self.panel = MainPanel(self)
-#        self.panel = XYTextCtrl(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
+#        self.panel = StaticTextResult(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
 
     def _create_menus(self):
         """ Create each menu for the menu bar """
@@ -440,6 +440,81 @@ class CheckedTextCtrl(wx.Panel):
         self.ctrl.ChangeValue(val)
 
 
+class StaticTextResult(wx.Panel):
+    """
+    """
+    def __init__(self, parent, label, default):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.lbl = wx.StaticText(self, label=self.label)
+        self._value = wx.StaticText(self, label=self.default,# size=(30, -1),
+                                    style=wx.ALIGN_RIGHT|wx.ST_NO_AUTORESIZE)
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.hbox.Add(self.lbl, 0)
+        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self._value, 1)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def value(self):
+        return self._value.GetLabel()
+
+    @value.setter
+    def value(self, val):
+        self._value.SetLabel(val)
+
+
+class ResultPanel(wx.Panel):
+    """
+    """
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.gdw_result = StaticTextResult(self,
+                                           "Gross Die per Wafer:",
+                                           "0",
+                                           )
+        self.ee_loss_result = StaticTextResult(self,
+                                               "Die lost to Edge Exclusion:",
+                                               "0",
+                                               )
+        self.flat_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Wafer Flat:",
+                                                 "0",
+                                                 )
+        self.fe_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Flat Exclusion:",
+                                                 "0",
+                                                 )
+        self.scribe_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Scribe Exclusion:",
+                                                 "0",
+                                                 )
+
+
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.gdw_result, 0, wx.EXPAND)
+        self.vbox.Add(self.ee_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.flat_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.fe_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.scribe_loss_result, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+
 class InputPanel(wx.Panel):
     """ Main input panel """
     def __init__(self, parent):
@@ -551,25 +626,7 @@ class MainPanel(wx.Panel):
         self.histograms = RadiusPlots(self, radius_data)
 
         # Result Info
-        self.gdw_lbl = wx.StaticText(self, label="Gross Die per Wafer:")
-        self.gdw_result = wx.StaticText(self, label="0")
-
-        self.ee_loss_lbl = wx.StaticText(self,
-                                         label="Die lost to Edge Exclusion:")
-
-        self.ee_loss_result = wx.StaticText(self, label="0")
-
-        self.flat_loss_lbl = wx.StaticText(self,
-                                           label="Die Lost to Wafer Flat:")
-        self.flat_loss_result = wx.StaticText(self, label="0")
-
-        self.fe_loss_lbl = wx.StaticText(self,
-                                         label="Die Lost to Flat Exclusion:")
-        self.fe_loss_result = wx.StaticText(self, label="0")
-
-        self.scribe_loss_lbl = wx.StaticText(self,
-                                             label="Die Lost to Scribe Exclusion:")
-        self.scribe_loss_result = wx.StaticText(self, label="0")
+        self.results = ResultPanel(self)
 
         # Center Info
         self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
@@ -591,25 +648,6 @@ class MainPanel(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
-
-        # Add items to the results layout
-        self.fgs_results.AddMany([self.gdw_lbl, self.gdw_result,
-                                  (-1, 10), (-1, 10),
-                                  self.ee_loss_lbl, self.ee_loss_result,
-                                  self.flat_loss_lbl, self.flat_loss_result,
-                                  self.fe_loss_lbl, self.fe_loss_result,
-                                  self.scribe_loss_lbl, self.scribe_loss_result,
-                                  (-1, 10), (-1, 10),
-                                  self.shape_lbl, (-1, -1),
-                                  self.shape_x_label, self.shape_x_result,
-                                  self.shape_y_lbl, self.shape_y_result,
-                                  (-1, 10), (-1, 10),
-                                  self.center_lbl, (-1, -1),
-                                  self.center_x_lbl, self.center_x_result,
-                                  self.center_y_lbl, self.center_y_result,
-                                  ])
-
         # Add items to the vertical side-bar box.
         self.vbox.Add(self.input_panel, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
@@ -617,7 +655,7 @@ class MainPanel(wx.Panel):
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
         self.vbox.Add(self.gen_mask_button, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
-        self.vbox.Add(self.fgs_results, 0, wx.EXPAND)
+        self.vbox.Add(self.results, 0, wx.EXPAND)
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
 
         # Add items to the main horizontal box sizer.
@@ -740,11 +778,11 @@ class MainPanel(wx.Panel):
         new_radius_data = list(math.sqrt(item) for item in radius_sqrd_data)
         self.histograms.update(new_radius_data)
 
-        self.gdw_result.SetLabel(str(self.gdw))
-        self.ee_loss_result.SetLabel(str(self.ee_loss))
-        self.flat_loss_result.SetLabel(str(self.flat_loss))
-        self.fe_loss_result.SetLabel(str(self.fe_loss))
-        self.scribe_loss_result.SetLabel(str(self.scribe_loss))
+        self.results.gdw_result.value = str(self.gdw)
+        self.results.ee_loss_result.value = str(self.ee_loss)
+        self.results.flat_loss_result.value = str(self.flat_loss)
+        self.results.fe_loss_result.value = str(self.fe_loss)
+        self.results.scribe_loss_result.value = str(self.scribe_loss)
 
         self.x_offset = self.center_xy[0] % 1
         if self.x_offset == 0:
