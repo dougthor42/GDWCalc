@@ -109,7 +109,7 @@ class MainFrame(wx.Frame):
         self.CreateStatusBar()
 
         self.panel = MainPanel(self)
-#        self.panel = CheckedTextCtrl(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
+#        self.panel = XYTextCtrl(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
 
     def _create_menus(self):
         """ Create each menu for the menu bar """
@@ -207,6 +207,49 @@ class MainFrame(wx.Frame):
         self.panel.wafer_map.toggle_die_gridlines()
 
 
+class XYTextCtrl(wx.Panel):
+    """
+    """
+    def __init__(self, parent, x_default, y_default):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
+
+        self.hbox.AddSpacer(25)
+        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def x_value(self):
+        return self.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.y_ctrl.ChangeValue(val)
+
+
 class LabeledTextCtrl(wx.Panel):
     """
     """
@@ -263,36 +306,30 @@ class LabeledXYCtrl(wx.Panel):
 
         self.text = wx.StaticText(self, label=self.label)
 
-        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
-        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
-
-        self.hbox.AddSpacer(25)
-        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        self.hbox.AddStretchSpacer()
-        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.ctrls = XYTextCtrl(self, self.x_default, self.y_default)
 
         self.vbox.Add(self.text)
-        self.vbox.Add(self.hbox, 0, wx.EXPAND)
+        self.vbox.Add(self.ctrls, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
     @property
     def x_value(self):
-        return self.x_ctrl.Value
+        return self.ctrls.x_ctrl.Value
 
     @x_value.setter
     def x_value(self, val):
         # ChangeValue does not fire wxECT_TEXT event; SetValue does.
-        self.x_ctrl.ChangeValue(val)
+        self.ctrls.x_ctrl.ChangeValue(val)
 
     @property
     def y_value(self):
-        return self.y_ctrl.Value
+        return self.ctrls.y_ctrl.Value
 
     @y_value.setter
     def y_value(self, val):
         # ChangeValue does not fire wxECT_TEXT event; SetValue does.
-        self.y_ctrl.ChangeValue(val)
+        self.ctrls.y_ctrl.ChangeValue(val)
 
 
 class CheckedXYCtrl(wx.Panel):
@@ -314,17 +351,10 @@ class CheckedXYCtrl(wx.Panel):
 
         self.chk_ctrl = wx.CheckBox(self, label=self.label)
 
-        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
-        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
-
-        self.hbox.AddSpacer(25)
-        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        self.hbox.AddSpacer(5)
-        self.hbox.AddStretchSpacer()
-        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.ctrls = XYTextCtrl(self, self.x_default, self.y_default)
 
         self.vbox.Add(self.chk_ctrl)
-        self.vbox.Add(self.hbox, 0, wx.EXPAND)
+        self.vbox.Add(self.ctrls, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
@@ -340,21 +370,21 @@ class CheckedXYCtrl(wx.Panel):
 
     @property
     def x_value(self):
-        return self.x_ctrl.Value
+        return self.ctrls.x_ctrl.Value
 
     @x_value.setter
     def x_value(self, val):
         # ChangeValue does not fire wxECT_TEXT event; SetValue does.
-        self.x_ctrl.ChangeValue(val)
+        self.ctrls.x_ctrl.ChangeValue(val)
 
     @property
     def y_value(self):
-        return self.y_ctrl.Value
+        return self.ctrls.y_ctrl.Value
 
     @y_value.setter
     def y_value(self, val):
         # ChangeValue does not fire wxECT_TEXT event; SetValue does.
-        self.y_ctrl.ChangeValue(val)
+        self.ctrls.y_ctrl.ChangeValue(val)
 
 
 class CheckedTextCtrl(wx.Panel):
