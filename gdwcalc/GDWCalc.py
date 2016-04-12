@@ -215,7 +215,7 @@ class MainPanel(wx.Panel):
         self.x_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
 
         # Die Y Size
-        self.y_lbl = wx.StaticText(self, label="Y ")
+        self.y_lbl = wx.StaticText(self, label="Die Size (mm) Y")
         self.y_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
 
         # Wafer Diameter
@@ -234,7 +234,7 @@ class MainPanel(wx.Panel):
         self.fo_chk = wx.CheckBox(self, label="Fixed Offsets")
         self.x_fo_lbl = wx.StaticText(self, label="Offset (mm) X")
         self.x_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fo_lbl = wx.StaticText(self, label="Y")
+        self.y_fo_lbl = wx.StaticText(self, label="Offset (mm) Y")
         self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
 
         # Force First Die Coord
@@ -338,39 +338,17 @@ class MainPanel(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.die_x_size_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.die_x_size_hbox.Add(self.x_lbl, 0, wx.EXPAND)
-        self.die_x_size_hbox.Add((10, -1), 0, wx.EXPAND)
-        self.die_x_size_hbox.Add(self.x_input, 0, wx.EXPAND)
-
-        self.die_y_size_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.die_y_size_hbox.Add(self.y_lbl, 0, wx.EXPAND)
-        self.die_y_size_hbox.Add((10, -1), 0, wx.EXPAND)
-        self.die_y_size_hbox.Add(self.y_input, 0, wx.EXPAND)
-
-        self.fixed_offsets_x_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.fixed_offsets_x_hbox.Add(self.x_fo_lbl, 0, wx.EXPAND)
-        self.fixed_offsets_x_hbox.Add((10, -1), 0, wx.EXPAND)
-        self.fixed_offsets_x_hbox.Add(self.x_fo_input, 0, wx.EXPAND)
-
-        self.fixed_offsets_y_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.fixed_offsets_y_hbox.Add(self.y_fo_lbl, 0, wx.EXPAND)
-        self.fixed_offsets_y_hbox.Add((10, -1), 0, wx.EXPAND)
-        self.fixed_offsets_y_hbox.Add(self.y_fo_input, 0, wx.EXPAND)
-
-        self.fgs_inputs = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=0)
+        self.fgs_inputs = wx.FlexGridSizer(rows=16, cols=2, vgap=0, hgap=0)
         self.fgs_inputs.AddMany([
-#                                 self.x_lbl, self.x_input,
-                                 self.die_x_size_hbox, self.die_y_size_hbox,
-#                                 self.y_lbl, self.y_input,
+                                 self.x_lbl, self.x_input,
+                                 self.y_lbl, self.y_input,
                                  self.dia_lbl, self.dia_input,
                                  self.ee_lbl, self.ee_input,
                                  self.fe_lbl, self.fe_input,
                                  (-1, 10), (-1, -1),
                                  self.fo_chk, (-1, -1),
-#                                 self.x_fo_lbl, self.x_fo_input,
-                                 self.fixed_offsets_x_hbox, self.fixed_offsets_y_hbox,
-#                                 self.y_fo_lbl, self.y_fo_input,
+                                 self.x_fo_lbl, self.x_fo_input,
+                                 self.y_fo_lbl, self.y_fo_input,
                                  (-1, 10), (-1, -1),
                                  self.fdc_chk, (-1, -1),
                                  self.x_fdc_lbl, self.x_fdc_input,
