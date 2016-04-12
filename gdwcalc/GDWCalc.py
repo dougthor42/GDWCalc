@@ -26,6 +26,7 @@ import math
 import numpy as np
 import wafer_map.wm_core as wm_core
 import wafer_map.wm_info as wm_info
+import wafer_map.wm_legend as wm_legend
 import wx
 import wx.lib.plot as wxplot
 
@@ -61,7 +62,7 @@ Enter\tCalculate GDW
 Home\tZoom to fit
 C\tToggle centerlines
 O\tToggle wafer outline
-L\tToggle legend
+G\tToggle die grid lines
 CTRL+Q\tExit
 
 Click on wafer map to
@@ -101,6 +102,7 @@ class MainFrame(wx.Frame):
         # Initialize default states
         self.mv_outline.Check()
         self.mv_crosshairs.Check()
+        self.mv_gridlines.Check()
 
         # Set the MenuBar and create a status bar (easy thanks to wx.Frame)
         self.SetMenuBar(self.menu_bar)
@@ -146,6 +148,12 @@ class MainFrame(wx.Frame):
                                       "Show or hide the wafer outline",
                                       wx.ITEM_CHECK,
                                       )
+        self.mv_gridlines = wx.MenuItem(self.mview,
+                                        wx.ID_ANY,
+                                        "Die Grid\tG",
+                                        "Show or hide the die grid lines",
+                                        wx.ITEM_CHECK,
+                                        )
 
     def _add_menu_items(self):
         """ Appends MenuItems to each menu """
@@ -155,6 +163,7 @@ class MainFrame(wx.Frame):
         self.mview.AppendSeparator()
         self.mview.Append(self.mv_crosshairs)
         self.mview.Append(self.mv_outline)
+        self.mview.Append(self.mv_gridlines)
 
     def _add_menus(self):
         """ Appends each menu to the menu bar """
@@ -169,6 +178,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.zoom_fit, self.mv_zoomfit)
         self.Bind(wx.EVT_MENU, self.toggle_crosshairs, self.mv_crosshairs)
         self.Bind(wx.EVT_MENU, self.toggle_outline, self.mv_outline)
+        self.Bind(wx.EVT_MENU, self.toggle_gridlines, self.mv_gridlines)
 
     def on_quit(self, event):
         """ Actions for the quit event """
@@ -190,6 +200,10 @@ class MainFrame(wx.Frame):
     def toggle_outline(self, event):
         """ Call the WaferMapPanel.toggle_outline() method """
         self.panel.wafer_map.toggle_outline()
+
+    def toggle_gridlines(self, event):
+        """ Call the WaferMapPanel.toggle_die_gridlines() method """
+        self.panel.wafer_map.toggle_die_gridlines()
 
 
 class MainPanel(wx.Panel):
@@ -244,6 +258,11 @@ class MainPanel(wx.Panel):
         self.y_fdc_lbl = wx.StaticText(self, label="Y (Row) Coord")
         self.y_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
 
+        # Scribe Location value
+        self.scribe_loc_chk = wx.CheckBox(self, label="Use the Aizu Scribe Location")
+        self.scribe_loc_lbl = wx.StaticText(self, label="Scribe Y Coord (mm)")
+        self.scribe_loc_input = wx.TextCtrl(self, wx.ID_ANY, "70.2", size=(50, -1))
+
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
         self.Bind(wx.EVT_BUTTON, self.on_calc_gdw, self.calc_button)
@@ -252,18 +271,37 @@ class MainPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.on_gen_mask, self.gen_mask_button)
 
         # Actual Wafer Map
-        legend_values = ["flat",
+        legend_values = [
+                         "flat",
                          "excl",
                          "probe",
                          "flatExcl",
+                         "scribe",
+                         ]
+        legend_colors = [
+                         wx.Colour(191, 0, 0),
+                         wx.Colour(0, 191, 191),
+                         wx.Colour(95, 191, 0),
+                         wx.Colour(95, 0, 191),
+                         wx.Colour(152, 191, 0),
                          ]
         self.wafer_map = wm_core.WaferMapPanel(self,
                                                self.coord_list,
                                                self.wafer_info,
                                                data_type='discrete',
-                                               plot_die_centers=True,
+                                               plot_die_centers=False,
+                                               show_die_gridlines=True,
                                                discrete_legend_values=legend_values
                                                )
+
+        # Hack until I raise the legend colors up to WaferMapPanel constructor.
+#        self.wafer_map.legend = wm_legend.DiscreteLegend(self.wafer_map,
+#                                                         legend_values,
+#                                                         legend_colors,
+#                                                         )
+#
+#        self.wafer_map.toggle_legend()
+#        self.wafer_map.toggle_legend()
 
         # Radius Histograms
         radius_sqrd_data = list(
@@ -290,6 +328,10 @@ class MainPanel(wx.Panel):
                                          label="Die Lost to Flat Exclusion:")
         self.fe_loss_result = wx.StaticText(self, label="0")
 
+        self.scribe_loss_lbl = wx.StaticText(self,
+                                             label="Die Lost to Scribe Exclusion:")
+        self.scribe_loss_result = wx.StaticText(self, label="0")
+
         # Center Info
         self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
         self.shape_x_label = wx.StaticText(self, label="X (Column):")
@@ -309,8 +351,10 @@ class MainPanel(wx.Panel):
         # Set the Layout
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.fgs_inputs = wx.FlexGridSizer(rows=13, cols=2, vgap=0, hgap=0)
-        self.fgs_inputs.AddMany([self.x_lbl, self.x_input,
+
+        self.fgs_inputs = wx.FlexGridSizer(rows=16, cols=2, vgap=0, hgap=0)
+        self.fgs_inputs.AddMany([
+                                 self.x_lbl, self.x_input,
                                  self.y_lbl, self.y_input,
                                  self.dia_lbl, self.dia_input,
                                  self.ee_lbl, self.ee_input,
@@ -323,9 +367,12 @@ class MainPanel(wx.Panel):
                                  self.fdc_chk, (-1, -1),
                                  self.x_fdc_lbl, self.x_fdc_input,
                                  self.y_fdc_lbl, self.y_fdc_input,
+                                 (-1, 10), (-1, -1),
+                                 self.scribe_loc_chk, (-1, -1),
+                                 self.scribe_loc_lbl, self.scribe_loc_input,
                                  ])
 
-        self.fgs_results = wx.FlexGridSizer(rows=13, cols=2, vgap=0, hgap=10)
+        self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
 
         # Add items to the results layout
         self.fgs_results.AddMany([self.gdw_lbl, self.gdw_result,
@@ -333,6 +380,7 @@ class MainPanel(wx.Panel):
                                   self.ee_loss_lbl, self.ee_loss_result,
                                   self.flat_loss_lbl, self.flat_loss_result,
                                   self.fe_loss_lbl, self.fe_loss_result,
+                                  self.scribe_loss_lbl, self.scribe_loss_result,
                                   (-1, 10), (-1, 10),
                                   self.shape_lbl, (-1, -1),
                                   self.shape_x_label, self.shape_x_result,
@@ -372,6 +420,10 @@ class MainPanel(wx.Panel):
         self.y_fo = float(self.y_fo_input.Value)
         self.fo = (self.x_fo, self.y_fo)
         self.grid_offset = (0, 0)
+        self.north_limit = float(self.scribe_loc_input.Value)
+
+        if not self.scribe_loc_chk.IsChecked():
+            self.north_limit = None
 
         # If using fixed offsets, call other function.
         if self.fo_bool:
@@ -380,6 +432,7 @@ class MainPanel(wx.Panel):
                                                  self.fo,
                                                  self.ee,
                                                  self.fe,
+                                                 self.north_limit
                                                  )
 
         else:
@@ -387,6 +440,7 @@ class MainPanel(wx.Panel):
                                                     self.dia,
                                                     self.ee,
                                                     self.fe,
+                                                    self.north_limit
                                                     )
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
@@ -417,6 +471,7 @@ class MainPanel(wx.Panel):
         self.flat_loss = 0
         self.ee_loss = 0
         self.fe_loss = 0
+        self.scribe_loss = 0
 
         # TODO: This isn't pythonic at all, but I'm ~~in a rush~~ lazy
         for rcd in self.coord_list:
@@ -428,6 +483,8 @@ class MainPanel(wx.Panel):
                 self.ee_loss += 1
             elif rcd[2] == 'flatExcl':
                 self.fe_loss += 1
+            elif rcd[2] == 'scribe':
+                self.scribe_loss += 1
             else:
                 raise KeyError("Invalid dieStatus value")
 
@@ -463,6 +520,7 @@ class MainPanel(wx.Panel):
         self.ee_loss_result.SetLabel(str(self.ee_loss))
         self.flat_loss_result.SetLabel(str(self.flat_loss))
         self.fe_loss_result.SetLabel(str(self.fe_loss))
+        self.scribe_loss_result.SetLabel(str(self.scribe_loss))
 
         self.x_offset = self.center_xy[0] % 1
         if self.x_offset == 0:
