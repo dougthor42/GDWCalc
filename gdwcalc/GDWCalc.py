@@ -434,6 +434,46 @@ class CheckedTextCtrl(wx.Panel):
         self.ctrl.ChangeValue(val)
 
 
+class InputPanel(wx.Panel):
+    """ Main input panel """
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.size_input = LabeledXYCtrl(self, "Die Size (mm):", "5", "5")
+        self.dia_input = LabeledTextCtrl(self, "Diameter (mm)", "150")
+        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "5")
+        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "5")
+        self.fo_ctrl = CheckedXYCtrl(self,
+                                     "Force Fixed Offsets? (mm):",
+                                     "0",
+                                     "0",
+                                     )
+        self.fdc_ctrl = CheckedXYCtrl(self, "Force 1st Die Coord?", "0", "0")
+        self.scribe_loc_ctrl = CheckedTextCtrl(self,
+                                               "Use the Aizu Scribe Location?",
+                                               "Y Coord (mm)",
+                                               "70.2",
+                                               )
+
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.size_input, 0, wx.EXPAND)
+        self.vbox.Add(self.dia_input, 0, wx.EXPAND)
+        self.vbox.Add(self.ee_input, 0, wx.EXPAND)
+        self.vbox.Add(self.fe_input, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.fo_ctrl, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.fdc_ctrl, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.scribe_loc_ctrl, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+
 class MainPanel(wx.Panel):
     """ Main Panel. Contains parameters and the map """
     def __init__(self, parent):
@@ -451,30 +491,7 @@ class MainPanel(wx.Panel):
 
     def init_ui(self):
         """ Create the UI """
-        # Die Size
-        self.size_input = LabeledXYCtrl(self, "Die Size (mm):", "5", "5")
-
-        # Wafer Diameter
-        self.dia_input = LabeledTextCtrl(self, "Diameter (mm)", "150")
-
-        # Edge Exclusion
-        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "5")
-
-        # Flat Exclusion
-        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "5")
-
-        # Fixed Offsets
-        self.fo_ctrl = CheckedXYCtrl(self, "Fixed Offsets (mm):", "0", "0")
-
-        # Force First Die Coord
-        self.fdc_ctrl = CheckedXYCtrl(self, "Force 1st Die Coord", "0", "0")
-
-        # Scribe Location value
-        self.scribe_loc_ctrl = CheckedTextCtrl(self,
-                                               "Use the Aizu Scribe Location?",
-                                               "Scribe Y Coord (mm)",
-                                               "70.2",
-                                               )
+        self.input_panel = InputPanel(self)
 
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
@@ -565,19 +582,6 @@ class MainPanel(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.inputs_vbox = wx.BoxSizer(wx.VERTICAL)
-
-        self.inputs_vbox.Add(self.size_input, 0, wx.EXPAND)
-        self.inputs_vbox.Add(self.dia_input, 0, wx.EXPAND)
-        self.inputs_vbox.Add(self.ee_input, 0, wx.EXPAND)
-        self.inputs_vbox.Add(self.fe_input, 0, wx.EXPAND)
-        self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.fo_ctrl, 0, wx.EXPAND)
-        self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.fdc_ctrl, 0, wx.EXPAND)
-        self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.scribe_loc_ctrl, 0, wx.EXPAND)
-
         self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
 
         # Add items to the results layout
@@ -598,7 +602,7 @@ class MainPanel(wx.Panel):
                                   ])
 
         # Add items to the vertical side-bar box.
-        self.vbox.Add(self.inputs_vbox, 0, wx.EXPAND)
+        self.vbox.Add(self.input_panel, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
         self.vbox.Add(self.calc_button, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
@@ -620,20 +624,20 @@ class MainPanel(wx.Panel):
         """ Performs the GDW Calculation on button click """
         print("Button Pressed")
 
-        self.die_x = float(self.size_input.x_value)
-        self.die_y = float(self.size_input.y_value)
+        self.die_x = float(self.input_panel.size_input.x_value)
+        self.die_y = float(self.input_panel.size_input.y_value)
         self.die_xy = (self.die_x, self.die_y)
-        self.dia = int(self.dia_input.Value)
-        self.ee = float(self.ee_input.Value)
-        self.fe = float(self.fe_input.Value)
-        self.fo_bool = bool(self.fo_ctrl.checked)
-        self.x_fo = float(self.fo_ctrl.x_value)
-        self.y_fo = float(self.fo_ctrl.y_value)
+        self.dia = int(self.input_panel.dia_input.Value)
+        self.ee = float(self.input_panel.ee_input.Value)
+        self.fe = float(self.input_panel.fe_input.Value)
+        self.fo_bool = bool(self.input_panel.fo_ctrl.checked)
+        self.x_fo = float(self.input_panel.fo_ctrl.x_value)
+        self.y_fo = float(self.input_panel.fo_ctrl.y_value)
         self.fo = (self.x_fo, self.y_fo)
         self.grid_offset = (0, 0)
-        self.north_limit = float(self.scribe_loc_ctrl.value)
+        self.north_limit = float(self.input_panel.scribe_loc_ctrl.value)
 
-        if not self.scribe_loc_ctrl.checked:
+        if not self.input_panel.scribe_loc_ctrl.checked:
             self.north_limit = None
 
         # If using fixed offsets, call other function.
@@ -656,15 +660,15 @@ class MainPanel(wx.Panel):
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         # If using a forced starting die (top-left), adjust coords
-        if self.fdc_ctrl.checked:
+        if self.input_panel.fdc_ctrl.checked:
             # Gind the topmost then leftmost probed die.
             min_y = min({c[1] for c in self.coord_list if c[2] == "probe"})
             min_x = min([c[0] for c in self.coord_list
                          if c[2] == "probe" and c[1] == min_y])
 
             # Calculate the delta
-            delta_x = min_x - int(self.fdc_ctrl.x_value)
-            delta_y = min_y - int(self.fdc_ctrl.y_value)
+            delta_x = min_x - int(self.input_panel.fdc_ctrl.x_value)
+            delta_y = min_y - int(self.input_panel.fdc_ctrl.y_value)
 
             self.grid_offset = (delta_x, delta_y)
 
