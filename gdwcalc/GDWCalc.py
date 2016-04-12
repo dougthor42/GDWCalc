@@ -70,6 +70,9 @@ zoom (mouse wheel) and
 pan (middle-click + drag)"""
 
 
+# ---------------------------------------------------------------------------
+### Application Classes
+# ---------------------------------------------------------------------------
 class MainApp(object):
     """ Main App Object """
     def __init__(self):
@@ -207,6 +210,9 @@ class MainFrame(wx.Frame):
         self.panel.wafer_map.toggle_die_gridlines()
 
 
+# ---------------------------------------------------------------------------
+### SubPanels
+# ---------------------------------------------------------------------------
 class XYTextCtrl(wx.Panel):
     """
     """
@@ -474,6 +480,9 @@ class InputPanel(wx.Panel):
         self.SetSizer(self.vbox)
 
 
+# ---------------------------------------------------------------------------
+### Main UI Panel
+# ---------------------------------------------------------------------------
 class MainPanel(wx.Panel):
     """ Main Panel. Contains parameters and the map """
     def __init__(self, parent):
@@ -773,6 +782,9 @@ class MainPanel(wx.Panel):
         statusbar.SetStatusText("Mask saved to '{}'".format(mask))
 
 
+# ---------------------------------------------------------------------------
+### Plotting Panels
+# ---------------------------------------------------------------------------
 class RadiusPlots(wx.Panel):
     """ A container for the two radius histograms """
     def __init__(self, parent, radius_data):
