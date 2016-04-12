@@ -212,7 +212,7 @@ class LabeledTextCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", default=""):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour(wx.CYAN)
+#        self.SetBackgroundColour(wx.CYAN)
         self.parent = parent
         self.label = label
         self.default = default
@@ -249,7 +249,7 @@ class LabeledXYCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour(wx.BLUE)
+#        self.SetBackgroundColour(wx.BLUE)
         self.parent = parent
         self.label = label
         self.x_default = x_default
@@ -263,16 +263,16 @@ class LabeledXYCtrl(wx.Panel):
 
         self.text = wx.StaticText(self, label=self.label)
 
-        self.x_ctrl = LabeledTextCtrl(self, "X", self.x_default)
-        self.y_ctrl = LabeledTextCtrl(self, "Y", self.y_default)
+        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
 
-        self.hbox.AddSpacer(10)
+        self.hbox.AddSpacer(25)
         self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
         self.hbox.AddStretchSpacer()
         self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
 
-        self.vbox.Add(self.text, 0, wx.EXPAND)
-        self.vbox.Add(self.hbox)
+        self.vbox.Add(self.text)
+        self.vbox.Add(self.hbox, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
@@ -300,7 +300,7 @@ class CheckedXYCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour(wx.YELLOW)
+#        self.SetBackgroundColour(wx.YELLOW)
         self.parent = parent
         self.label = label
         self.x_default = x_default
@@ -314,17 +314,17 @@ class CheckedXYCtrl(wx.Panel):
 
         self.chk_ctrl = wx.CheckBox(self, label=self.label)
 
-        self.x_ctrl = LabeledTextCtrl(self, "X", self.x_default)
-        self.y_ctrl = LabeledTextCtrl(self, "Y", self.y_default)
+        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
 
-        self.hbox.AddSpacer(10)
+        self.hbox.AddSpacer(25)
         self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
         self.hbox.AddSpacer(5)
         self.hbox.AddStretchSpacer()
         self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
 
-        self.vbox.Add(self.chk_ctrl, 0, wx.EXPAND)
-        self.vbox.Add(self.hbox)
+        self.vbox.Add(self.chk_ctrl)
+        self.vbox.Add(self.hbox, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
@@ -362,7 +362,7 @@ class CheckedTextCtrl(wx.Panel):
     """
     def __init__(self, parent, check_label="", ctrl_label="", default=""):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour(wx.GREEN)
+#        self.SetBackgroundColour(wx.GREEN)
         self.parent = parent
         self.check_label = check_label
         self.ctrl_label = ctrl_label
@@ -378,12 +378,12 @@ class CheckedTextCtrl(wx.Panel):
 
         self.ctrl = LabeledTextCtrl(self, self.ctrl_label, self.default)
 
-        self.hbox.AddSpacer(10)
-        self.hbox.AddStretchSpacer()
-        self.hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.AddSpacer(25)
+#        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self.ctrl, 1, wx.EXPAND)
 
-        self.vbox.Add(self.chk_ctrl, 0, wx.EXPAND)
-        self.vbox.Add(self.hbox)
+        self.vbox.Add(self.chk_ctrl)
+        self.vbox.Add(self.hbox, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
@@ -537,19 +537,16 @@ class MainPanel(wx.Panel):
 
         self.inputs_vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.inputs_vbox.Add(self.size_input)
-        self.inputs_vbox.Add(self.dia_input)
-        self.inputs_vbox.Add(self.ee_input)
-        self.inputs_vbox.Add(self.fe_input)
+        self.inputs_vbox.Add(self.size_input, 0, wx.EXPAND)
+        self.inputs_vbox.Add(self.dia_input, 0, wx.EXPAND)
+        self.inputs_vbox.Add(self.ee_input, 0, wx.EXPAND)
+        self.inputs_vbox.Add(self.fe_input, 0, wx.EXPAND)
         self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.fo_ctrl)
+        self.inputs_vbox.Add(self.fo_ctrl, 0, wx.EXPAND)
         self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.fdc_ctrl)
+        self.inputs_vbox.Add(self.fdc_ctrl, 0, wx.EXPAND)
         self.inputs_vbox.AddSpacer(10)
-        self.inputs_vbox.Add(self.scribe_loc_ctrl)
-
-        self.inputs_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.inputs_hbox.Add(self.inputs_vbox, 1, wx.EXPAND)
+        self.inputs_vbox.Add(self.scribe_loc_ctrl, 0, wx.EXPAND)
 
         self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
 
@@ -571,7 +568,7 @@ class MainPanel(wx.Panel):
                                   ])
 
         # Add items to the vertical side-bar box.
-        self.vbox.Add(self.inputs_hbox, 0, wx.EXPAND)
+        self.vbox.Add(self.inputs_vbox, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
         self.vbox.Add(self.calc_button, 0, wx.EXPAND)
         self.vbox.Add((-1, 10), 0, wx.EXPAND)
@@ -581,6 +578,7 @@ class MainPanel(wx.Panel):
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
 
         # Add items to the main horizontal box sizer.
+        self.hbox.AddSpacer(2)
         self.hbox.Add(self.vbox, 0, wx.EXPAND)
         self.hbox.Add((20, -1), 0, wx.EXPAND)
         self.hbox.Add(self.wafer_map, 2, wx.EXPAND)
