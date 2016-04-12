@@ -209,6 +209,11 @@ class MainFrame(wx.Frame):
         """ Call the WaferMapPanel.toggle_die_gridlines() method """
         self.panel.wafer_map.toggle_die_gridlines()
 
+        # Hack to get center lines to always be on top
+        if self.mv_gridlines.IsChecked():
+            self.panel.wafer_map.toggle_crosshairs()
+            self.panel.wafer_map.toggle_crosshairs()
+
 
 # ---------------------------------------------------------------------------
 ### SubPanels
@@ -504,6 +509,13 @@ class ResultPanel(wx.Panel):
                                                  "0",
                                                  )
 
+        self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
+        self.shape_x_result = StaticTextResult(self, "X (Column):", "0 (odd)")
+        self.shape_y_result = StaticTextResult(self, "Y (Row):", "0 (odd)")
+
+        self.center_lbl = wx.StaticText(self, label="Center Coords:")
+        self.center_x_result = StaticTextResult(self, "X (Column):", "0")
+        self.center_y_result = StaticTextResult(self, "Y (Row):", "0")
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.gdw_result, 0, wx.EXPAND)
@@ -511,6 +523,14 @@ class ResultPanel(wx.Panel):
         self.vbox.Add(self.flat_loss_result, 0, wx.EXPAND)
         self.vbox.Add(self.fe_loss_result, 0, wx.EXPAND)
         self.vbox.Add(self.scribe_loss_result, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.shape_lbl)
+        self.vbox.Add(self.shape_x_result, 0, wx.EXPAND)
+        self.vbox.Add(self.shape_y_result, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.center_lbl)
+        self.vbox.Add(self.center_x_result, 0, wx.EXPAND)
+        self.vbox.Add(self.center_y_result, 0, wx.EXPAND)
 
         self.SetSizer(self.vbox)
 
@@ -627,19 +647,6 @@ class MainPanel(wx.Panel):
 
         # Result Info
         self.results = ResultPanel(self)
-
-        # Center Info
-        self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
-        self.shape_x_label = wx.StaticText(self, label="X (Column):")
-        self.shape_x_result = wx.StaticText(self, label="0 (odd)")
-        self.shape_y_lbl = wx.StaticText(self, label="Y (Row):")
-        self.shape_y_result = wx.StaticText(self, label="0 (odd)")
-
-        self.center_lbl = wx.StaticText(self, label="Center Coords:")
-        self.center_x_lbl = wx.StaticText(self, label="X (Column):")
-        self.center_x_result = wx.StaticText(self, label="0")
-        self.center_y_lbl = wx.StaticText(self, label="Y (Row):")
-        self.center_y_result = wx.StaticText(self, label="0")
 
         # Instructions:
         self.instructions = wx.StaticText(self, label=INSTRUCTION_TEXT)
@@ -789,17 +796,17 @@ class MainPanel(wx.Panel):
             self.x_offset = "0 (odd)".format(self.x_offset)
         else:
             self.x_offset = "0.5 (even)".format(self.x_offset)
-        self.shape_x_result.SetLabel(str(self.x_offset))
+        self.results.shape_x_result.value = str(self.x_offset)
 
         self.y_offset = self.center_xy[1] % 1
         if self.y_offset == 0:
             self.y_offset = "0 (odd)".format(self.y_offset)
         else:
             self.y_offset = "0.5 (even)".format(self.y_offset)
-        self.shape_y_result.SetLabel(str(self.y_offset))
+        self.results.shape_y_result.value = str(self.y_offset)
 
-        self.center_x_result.SetLabel(str(self.center_xy[0]))
-        self.center_y_result.SetLabel(str(self.center_xy[1]))
+        self.results.center_x_result.value = str(self.center_xy[0])
+        self.results.center_y_result.value = str(self.center_xy[1])
 
         # Update the screen
         self.Refresh()
