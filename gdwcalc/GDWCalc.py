@@ -112,7 +112,7 @@ class MainFrame(wx.Frame):
         self.CreateStatusBar()
 
         self.panel = MainPanel(self)
-#        self.panel = StaticTextResult(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
+#        self.panel = StaticXYTextResult(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
 
     def _create_menus(self):
         """ Create each menu for the menu bar """
@@ -458,7 +458,7 @@ class StaticTextResult(wx.Panel):
 
     def _init_ui(self):
         self.lbl = wx.StaticText(self, label=self.label)
-        self._value = wx.StaticText(self, label=self.default,# size=(30, -1),
+        self._value = wx.StaticText(self, label=self.default,
                                     style=wx.ALIGN_RIGHT|wx.ST_NO_AUTORESIZE)
 
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -476,6 +476,48 @@ class StaticTextResult(wx.Panel):
     @value.setter
     def value(self, val):
         self._value.SetLabel(val)
+
+
+class StaticXYTextResult(wx.Panel):
+    """
+    """
+    def __init__(self, parent, x_default, y_default):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self._x_value = StaticTextResult(self, "X (col):", self.x_default)
+        self._y_value = StaticTextResult(self, "Y (row):", self.y_default)
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+#        self.hbox.AddSpacer(10)
+#        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self._x_value, 0, wx.EXPAND)
+#        self.hbox.AddSpacer(10)
+        self.hbox.Add(self._y_value, 0, wx.EXPAND)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def x_value(self):
+        return self._x_value.GetLabel()
+
+    @x_value.setter
+    def x_value(self, val):
+        self._x_value.SetLabel(val)
+
+    @property
+    def y_value(self):
+        return self._y_value.GetLabel()
+
+    @y_value.setter
+    def y_value(self, val):
+        self._y_value.SetLabel(val)
 
 
 class ResultPanel(wx.Panel):
@@ -509,13 +551,15 @@ class ResultPanel(wx.Panel):
                                                  "0",
                                                  )
 
-        self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
-        self.shape_x_result = StaticTextResult(self, "X (Column):", "0 (odd)")
-        self.shape_y_result = StaticTextResult(self, "Y (Row):", "0 (odd)")
+        self.shape_x_result = StaticTextResult(self,
+                                               "Center X (Column) Offset:",
+                                               "0 (odd)")
+        self.shape_y_result = StaticTextResult(self,
+                                               "Center Y (Row) Offset:",
+                                               "0 (odd)")
 
-        self.center_lbl = wx.StaticText(self, label="Center Coords:")
-        self.center_x_result = StaticTextResult(self, "X (Column):", "0")
-        self.center_y_result = StaticTextResult(self, "Y (Row):", "0")
+        self.center_x_result = StaticTextResult(self, "Center X Coord:", "0")
+        self.center_y_result = StaticTextResult(self, "Center Y Coord:", "0")
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.gdw_result, 0, wx.EXPAND)
@@ -524,11 +568,9 @@ class ResultPanel(wx.Panel):
         self.vbox.Add(self.fe_loss_result, 0, wx.EXPAND)
         self.vbox.Add(self.scribe_loss_result, 0, wx.EXPAND)
         self.vbox.AddSpacer(10)
-        self.vbox.Add(self.shape_lbl)
         self.vbox.Add(self.shape_x_result, 0, wx.EXPAND)
         self.vbox.Add(self.shape_y_result, 0, wx.EXPAND)
         self.vbox.AddSpacer(10)
-        self.vbox.Add(self.center_lbl)
         self.vbox.Add(self.center_x_result, 0, wx.EXPAND)
         self.vbox.Add(self.center_y_result, 0, wx.EXPAND)
 
