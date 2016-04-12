@@ -62,6 +62,7 @@ Enter\tCalculate GDW
 Home\tZoom to fit
 C\tToggle centerlines
 O\tToggle wafer outline
+G\tToggle die grid lines
 CTRL+Q\tExit
 
 Click on wafer map to
@@ -101,6 +102,7 @@ class MainFrame(wx.Frame):
         # Initialize default states
         self.mv_outline.Check()
         self.mv_crosshairs.Check()
+        self.mv_gridlines.Check()
 
         # Set the MenuBar and create a status bar (easy thanks to wx.Frame)
         self.SetMenuBar(self.menu_bar)
@@ -146,6 +148,12 @@ class MainFrame(wx.Frame):
                                       "Show or hide the wafer outline",
                                       wx.ITEM_CHECK,
                                       )
+        self.mv_gridlines = wx.MenuItem(self.mview,
+                                        wx.ID_ANY,
+                                        "Die Grid\tG",
+                                        "Show or hide the die grid lines",
+                                        wx.ITEM_CHECK,
+                                        )
 
     def _add_menu_items(self):
         """ Appends MenuItems to each menu """
@@ -155,6 +163,7 @@ class MainFrame(wx.Frame):
         self.mview.AppendSeparator()
         self.mview.Append(self.mv_crosshairs)
         self.mview.Append(self.mv_outline)
+        self.mview.Append(self.mv_gridlines)
 
     def _add_menus(self):
         """ Appends each menu to the menu bar """
@@ -169,6 +178,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.zoom_fit, self.mv_zoomfit)
         self.Bind(wx.EVT_MENU, self.toggle_crosshairs, self.mv_crosshairs)
         self.Bind(wx.EVT_MENU, self.toggle_outline, self.mv_outline)
+        self.Bind(wx.EVT_MENU, self.toggle_gridlines, self.mv_gridlines)
 
     def on_quit(self, event):
         """ Actions for the quit event """
@@ -191,6 +201,10 @@ class MainFrame(wx.Frame):
         """ Call the WaferMapPanel.toggle_outline() method """
         self.panel.wafer_map.toggle_outline()
 
+    def toggle_gridlines(self, event):
+        """ Call the WaferMapPanel.toggle_die_gridlines() method """
+        self.panel.wafer_map.toggle_die_gridlines()
+
 
 class MainPanel(wx.Panel):
     """ Main Panel. Contains parameters and the map """
@@ -211,11 +225,11 @@ class MainPanel(wx.Panel):
         """ Create the UI """
 
         # Die X Size
-        self.x_lbl = wx.StaticText(self, label="Die Size (mm) X")
+        self.x_lbl = wx.StaticText(self, label="X Size (mm)")
         self.x_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
 
         # Die Y Size
-        self.y_lbl = wx.StaticText(self, label="Die Size (mm) Y")
+        self.y_lbl = wx.StaticText(self, label="Y Size (mm)")
         self.y_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
 
         # Wafer Diameter
@@ -232,9 +246,9 @@ class MainPanel(wx.Panel):
 
         # Fixed Offsets
         self.fo_chk = wx.CheckBox(self, label="Fixed Offsets")
-        self.x_fo_lbl = wx.StaticText(self, label="Offset (mm) X")
+        self.x_fo_lbl = wx.StaticText(self, label="X Offset (mm)")
         self.x_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fo_lbl = wx.StaticText(self, label="Offset (mm) Y")
+        self.y_fo_lbl = wx.StaticText(self, label="Y Offset (mm)")
         self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
 
         # Force First Die Coord
@@ -276,7 +290,7 @@ class MainPanel(wx.Panel):
                                                self.wafer_info,
                                                data_type='discrete',
                                                plot_die_centers=False,
-                                               show_die_gridlines=False,
+                                               show_die_gridlines=True,
                                                discrete_legend_values=legend_values
                                                )
 
