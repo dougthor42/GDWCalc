@@ -237,7 +237,7 @@ def flat_location(dia):
     return flat_y
 
 
-def calc_die_state(wafer, x_grid, y_grid):
+def calc_die_state(wafer, x_grid, y_grid, north_limit=None):
     """
     Calculates the state of a given die from its grid coordinates.
 
@@ -294,6 +294,8 @@ def calc_die_state(wafer, x_grid, y_grid):
     elif coord_lower_left_y < (wafer.flat_y + wafer.flat_excl):
         # it's ouside the flat exclusion
         status = "flatExcl"
+    elif north_limit is not None and coord_lower_left_y + wafer.die_y > north_limit:
+        status = "scribe"
     else:
         # it's a good die, add it to the list
         status = "probe"
@@ -306,7 +308,8 @@ def calc_die_state(wafer, x_grid, y_grid):
             )
 
 
-def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
+def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5,
+        north_limit=None):
     """
     Calculates Gross Die per Wafer (GDW) for a given die_size,
     wafer diameter, center_offset, and exclusion width (mm).
@@ -332,6 +335,10 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     flat_excl : int or float
         The flat exclusion distance in mm.
 
+    north_limit : int or float
+        The maximum y value that die can exist. This can be used as a scribe
+        keep-out value.
+
     Returns:
     --------
     grid_points : list of tuples
@@ -348,6 +355,9 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
 
         'wafer', 'flat', 'excl', 'flatExcl', 'probe'
     """
+
+    if north_limit is None:
+        north_limit = dia
 
     wafer = Wafer(die_size, center_offset, dia, excl, flat_excl)
 
@@ -368,7 +378,7 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     grid_points = []
     for _x in range(1, wafer.grid_max_x):
         for _y in range(1, wafer.grid_max_y):
-            die = calc_die_state(wafer, _x, _y)
+            die = calc_die_state(wafer, _x, _y, north_limit)
             if die[4] == 'wafer':
                 continue
             grid_points.append(die)
@@ -376,7 +386,7 @@ def gdw(die_size, dia, center_offset=('odd', 'odd'), excl=5, flat_excl=5):
     return (grid_points, wafer.grid_center_xy)
 
 
-def gdw_fo(die_size, dia, fo, excl=5, flat_excl=5):
+def gdw_fo(die_size, dia, fo, excl=5, flat_excl=5, north_limit=None):
     """
     Calculates Gross Die per Wafer (GDW) for a given die_size (X, Y),
     wafer diameter dia, center fixed offset (fo), and exclusion width (mm).
@@ -389,10 +399,10 @@ def gdw_fo(die_size, dia, fo, excl=5, flat_excl=5):
     DIE_STATUS = [wafer, flat, excl, flatExcl, probe]
     """
     warnings.warn("Use `gdw` function instead", PendingDeprecationWarning)
-    return gdw(die_size, dia, fo, excl, flat_excl)
+    return gdw(die_size, dia, fo, excl, flat_excl, north_limit)
 
 
-def maxGDW(die_size, dia, excl, fssExcl):
+def maxGDW(die_size, dia, excl, fssExcl, north_limit=None):
     """
 
     returns list of tuples of (xCol, yRow, xCoord, yCoord, dieStatus)
@@ -438,7 +448,7 @@ def maxGDW(die_size, dia, excl, fssExcl):
         edgeCount = 0
         flatCount = 0
         flatExclCount = 0
-        dieList, grid_center = gdw(die_size, dia, shift, excl, fssExcl)
+        dieList, grid_center = gdw(die_size, dia, shift, excl, fssExcl, north_limit)
         for die in dieList:
             if die[-1] == "probe":
                 probeCount += 1
@@ -627,7 +637,7 @@ def example_gdw_calc():
     dia = 150
     excl = 4.5
     fssExcl = 4.5
-    dielist, grid_center = maxGDW(die_size, dia, excl, fssExcl)
+    dielist, grid_center = maxGDW(die_size, dia, excl, fssExcl, 70.2)
     grid_center = (30.5, 27.5)
     grid_center = (14.3386, 8.5589)
     coord_list = [(i[0]+grid_center[0], i[1]+grid_center[1], i[4])
