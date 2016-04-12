@@ -109,6 +109,7 @@ class MainFrame(wx.Frame):
         self.CreateStatusBar()
 
         self.panel = MainPanel(self)
+#        self.panel = CheckedTextCtrl(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
 
     def _create_menus(self):
         """ Create each menu for the menu bar """
@@ -206,6 +207,199 @@ class MainFrame(wx.Frame):
         self.panel.wafer_map.toggle_die_gridlines()
 
 
+class LabeledTextCtrl(wx.Panel):
+    """
+    """
+    def __init__(self, parent, label="", default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        # TODO: what to do if label is empty?
+        self.text = wx.StaticText(self, label=self.label)
+        self.ctrl = wx.TextCtrl(self, wx.ID_ANY, self.default, size=(50, -1))
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.hbox.Add(self.text, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.AddSpacer(5)
+        self.hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def value(self):
+        return self.ctrl.Value
+
+    @value.setter
+    def value(self, val):
+        self.ctrl.Value = val
+
+    # Make it easier for people used to wxPython's CamelCase
+    Value = value
+
+
+class LabeledXYCtrl(wx.Panel):
+    """
+    """
+    def __init__(self, parent, label="", x_default="", y_default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.text = wx.StaticText(self, label=self.label)
+
+        self.x_ctrl = LabeledTextCtrl(self, "X", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y", self.y_default)
+
+        self.hbox.AddSpacer(10)
+        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.Add((-1, -1), 1, wx.EXPAND)
+        self.hbox.AddSpacer(5)
+        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.vbox.Add(self.text, 0, wx.EXPAND)
+        self.vbox.Add(self.hbox)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def x_value(self):
+        return self.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.y_ctrl.ChangeValue(val)
+
+
+class CheckedXYCtrl(wx.Panel):
+    """
+    """
+    def __init__(self, parent, label="", x_default="", y_default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.chk_ctrl = wx.CheckBox(self, label=self.label)
+
+        self.x_ctrl = LabeledTextCtrl(self, "X", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y", self.y_default)
+
+        self.hbox.AddSpacer(10)
+        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.Add((-1, -1), 1, wx.EXPAND)
+        self.hbox.AddSpacer(5)
+        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.vbox.Add(self.chk_ctrl, 0, wx.EXPAND)
+        self.vbox.Add(self.hbox)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def checked(self):
+        return self.chk_ctrl.IsChecked()
+
+    @checked.setter
+    def checked(self, val):
+        if val not in (True, False):
+            raise TypeError("Value must be a boolean: `True` or `False`")
+        self.chk_ctrl.SetValue(val)
+
+    @property
+    def x_value(self):
+        return self.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.y_ctrl.ChangeValue(val)
+
+
+class CheckedTextCtrl(wx.Panel):
+    """
+    """
+    def __init__(self, parent, check_label="", ctrl_label="", default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.check_label = check_label
+        self.ctrl_label = ctrl_label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.chk_ctrl = wx.CheckBox(self, label=self.check_label)
+
+        self.ctrl = LabeledTextCtrl(self, self.ctrl_label, self.default)
+
+        self.hbox.AddSpacer(10)
+        self.hbox.Add((-1, -1), 1, wx.EXPAND)
+        self.hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.vbox.Add(self.chk_ctrl, 0, wx.EXPAND)
+        self.vbox.Add(self.hbox)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def checked(self):
+        return self.chk_ctrl.IsChecked()
+
+    @checked.setter
+    def checked(self, val):
+        self.chk_ctrl.SetValue(val)
+
+    @property
+    def value(self):
+        return self.ctrl.Value
+
+    @value.setter
+    def value(self, val):
+        self.ctrl.ChangeValue(val)
+
+
 class MainPanel(wx.Panel):
     """ Main Panel. Contains parameters and the map """
     def __init__(self, parent):
@@ -225,43 +419,34 @@ class MainPanel(wx.Panel):
         """ Create the UI """
 
         # Die X Size
-        self.x_lbl = wx.StaticText(self, label="X Size (mm)")
-        self.x_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
+#        self.x_input = LabeledTextCtrl(self, "X", "5")
 
         # Die Y Size
-        self.y_lbl = wx.StaticText(self, label="Y Size (mm)")
-        self.y_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
+#        self.y_input = LabeledTextCtrl(self, "Y", "5")
+
+        self.size_input = LabeledXYCtrl(self, "Die Size (mm):", "5", "5")
 
         # Wafer Diameter
-        self.dia_lbl = wx.StaticText(self, label="Wafer Diameter (mm)")
-        self.dia_input = wx.TextCtrl(self, wx.ID_ANY, "150", size=(50, -1))
+        self.dia_input = LabeledTextCtrl(self, "Diameter (mm)", "150")
 
         # Edge Exclusion
-        self.ee_lbl = wx.StaticText(self, label="Edge Exlusion (mm)")
-        self.ee_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
+        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "5")
 
         # Flat Exclusion
-        self.fe_lbl = wx.StaticText(self, label="Flat Exclusion (mm)")
-        self.fe_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
+        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "5")
 
         # Fixed Offsets
-        self.fo_chk = wx.CheckBox(self, label="Fixed Offsets")
-        self.x_fo_lbl = wx.StaticText(self, label="X Offset (mm)")
-        self.x_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fo_lbl = wx.StaticText(self, label="Y Offset (mm)")
-        self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+        self.fo_ctrl = CheckedXYCtrl(self, "Fixed Offsets (mm):", "0", "0")
 
         # Force First Die Coord
-        self.fdc_chk = wx.CheckBox(self, label="Force 1st Die Coord")
-        self.x_fdc_lbl = wx.StaticText(self, label="X (Column) Coord")
-        self.x_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fdc_lbl = wx.StaticText(self, label="Y (Row) Coord")
-        self.y_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
+        self.fdc_ctrl = CheckedXYCtrl(self, "First 1st Die Coord", "0", "0")
 
         # Scribe Location value
-        self.scribe_loc_chk = wx.CheckBox(self, label="Use the Aizu Scribe Location")
-        self.scribe_loc_lbl = wx.StaticText(self, label="Scribe Y Coord (mm)")
-        self.scribe_loc_input = wx.TextCtrl(self, wx.ID_ANY, "70.2", size=(50, -1))
+        self.scribe_loc_ctrl = CheckedTextCtrl(self,
+                                               "Use the Aizu Scribe Location?",
+                                               "Scribe Y Coord (mm)",
+                                               "70.2",
+                                               )
 
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
@@ -352,24 +537,18 @@ class MainPanel(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.fgs_inputs = wx.FlexGridSizer(rows=16, cols=2, vgap=0, hgap=0)
+        self.fgs_inputs = wx.FlexGridSizer(rows=10, cols=2, vgap=0, hgap=0)
         self.fgs_inputs.AddMany([
-                                 self.x_lbl, self.x_input,
-                                 self.y_lbl, self.y_input,
-                                 self.dia_lbl, self.dia_input,
-                                 self.ee_lbl, self.ee_input,
-                                 self.fe_lbl, self.fe_input,
+                                 (-1, -1), self.size_input,
+                                 (-1, -1), self.dia_input,
+                                 (-1, -1), self.ee_input,
+                                 (-1, -1), self.fe_input,
                                  (-1, 10), (-1, -1),
-                                 self.fo_chk, (-1, -1),
-                                 self.x_fo_lbl, self.x_fo_input,
-                                 self.y_fo_lbl, self.y_fo_input,
+                                 self.fo_ctrl, (-1, -1),
                                  (-1, 10), (-1, -1),
-                                 self.fdc_chk, (-1, -1),
-                                 self.x_fdc_lbl, self.x_fdc_input,
-                                 self.y_fdc_lbl, self.y_fdc_input,
+                                 self.fdc_ctrl, (-1, -1),
                                  (-1, 10), (-1, -1),
-                                 self.scribe_loc_chk, (-1, -1),
-                                 self.scribe_loc_lbl, self.scribe_loc_input,
+                                 self.scribe_loc_ctrl, (-1, -1),
                                  ])
 
         self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
@@ -409,20 +588,20 @@ class MainPanel(wx.Panel):
         """ Performs the GDW Calculation on button click """
         print("Button Pressed")
 
-        self.die_x = float(self.x_input.Value)
-        self.die_y = float(self.y_input.Value)
+        self.die_x = float(self.size_input.x_value)
+        self.die_y = float(self.size_input.y_value)
         self.die_xy = (self.die_x, self.die_y)
         self.dia = int(self.dia_input.Value)
         self.ee = float(self.ee_input.Value)
         self.fe = float(self.fe_input.Value)
-        self.fo_bool = bool(self.fo_chk.Value)
-        self.x_fo = float(self.x_fo_input.Value)
-        self.y_fo = float(self.y_fo_input.Value)
+        self.fo_bool = bool(self.fo_ctrl.checked)
+        self.x_fo = float(self.fo_ctrl.x_value)
+        self.y_fo = float(self.fo_ctrl.y_value)
         self.fo = (self.x_fo, self.y_fo)
         self.grid_offset = (0, 0)
-        self.north_limit = float(self.scribe_loc_input.Value)
+        self.north_limit = float(self.scribe_loc_ctrl.value)
 
-        if not self.scribe_loc_chk.IsChecked():
+        if not self.scribe_loc_ctrl.checked:
             self.north_limit = None
 
         # If using fixed offsets, call other function.
@@ -445,15 +624,15 @@ class MainPanel(wx.Panel):
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         # If using a forced starting die (top-left), adjust coords
-        if self.fdc_chk.Value:
+        if self.fdc_ctrl.checked:
             # Gind the topmost then leftmost probed die.
             min_y = min({c[1] for c in self.coord_list if c[2] == "probe"})
             min_x = min([c[0] for c in self.coord_list
                          if c[2] == "probe" and c[1] == min_y])
 
             # Calculate the delta
-            delta_x = min_x - int(self.x_fdc_input.Value)
-            delta_y = min_y - int(self.y_fdc_input.Value)
+            delta_x = min_x - int(self.fdc_ctrl.x_value)
+            delta_y = min_y - int(self.fdc_ctrl.y_value)
 
             self.grid_offset = (delta_x, delta_y)
 
@@ -550,7 +729,7 @@ class MainPanel(wx.Panel):
 
         try:
             gdw.gen_mask_file(self.coord_list, mask,
-                              self.die_xy, self.dia, self.fdc_chk.Value)
+                              self.die_xy, self.dia, self.fdc_ctrl.checked)
         except Exception as err:
             print(err)
             statusbar.SetStatusText("Error: {}".format(err))
