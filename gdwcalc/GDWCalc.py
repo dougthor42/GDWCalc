@@ -56,7 +56,7 @@ except (SystemError, ValueError):
 
 TITLE_TEXT = "GDWCalc v{}   Released {}".format(__version__,
                                                 __released__)
-INSTRUCTION_TEXT = """
+INSTRUCTION_TEXT = """\
 Keyboard Shortcuts:
 Enter\tCalculate GDW
 Home\tZoom to fit
@@ -266,7 +266,6 @@ class LabeledTextCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", default=""):
         wx.Panel.__init__(self, parent)
-#        self.SetBackgroundColour(wx.CYAN)
         self.parent = parent
         self.label = label
         self.default = default
@@ -303,7 +302,6 @@ class LabeledXYCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
-#        self.SetBackgroundColour(wx.BLUE)
         self.parent = parent
         self.label = label
         self.x_default = x_default
@@ -348,7 +346,6 @@ class CheckedXYCtrl(wx.Panel):
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
-#        self.SetBackgroundColour(wx.YELLOW)
         self.parent = parent
         self.label = label
         self.x_default = x_default
@@ -403,7 +400,6 @@ class CheckedTextCtrl(wx.Panel):
     """
     def __init__(self, parent, check_label="", ctrl_label="", default=""):
         wx.Panel.__init__(self, parent)
-#        self.SetBackgroundColour(wx.GREEN)
         self.parent = parent
         self.check_label = check_label
         self.ctrl_label = ctrl_label
@@ -420,7 +416,6 @@ class CheckedTextCtrl(wx.Panel):
         self.ctrl = LabeledTextCtrl(self, self.ctrl_label, self.default)
 
         self.hbox.AddSpacer(25)
-#        self.hbox.AddStretchSpacer()
         self.hbox.Add(self.ctrl, 1, wx.EXPAND)
 
         self.vbox.Add(self.chk_ctrl)
@@ -706,18 +701,19 @@ class MainPanel(wx.Panel):
 
         # Add items to the vertical side-bar box.
         self.vbox.Add(self.input_panel, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.calc_button, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.gen_mask_button, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.results, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
 
         # Add items to the main horizontal box sizer.
         self.hbox.AddSpacer(2)
         self.hbox.Add(self.vbox, 0, wx.EXPAND)
-        self.hbox.Add((20, -1), 0, wx.EXPAND)
+        self.hbox.AddSpacer(20)
         self.hbox.Add(self.wafer_map, 2, wx.EXPAND)
         self.hbox.Add(self.histograms, 1, wx.EXPAND)
 
