@@ -112,7 +112,6 @@ class MainFrame(wx.Frame):
         self.CreateStatusBar()
 
         self.panel = MainPanel(self)
-#        self.panel = StaticXYTextResult(self, "Die Size (mm):", "Something as long as this stirng shoudl be odd")
 
     def _create_menus(self):
         """ Create each menu for the menu bar """
@@ -220,8 +219,34 @@ class MainFrame(wx.Frame):
 # ---------------------------------------------------------------------------
 class XYTextCtrl(wx.Panel):
     """
+    SubPanel for an XY input.
+
+    Contains a 25px spacer, a LabeledTextCtrl, a stretch spacer, and a
+    second LabeledTextCtrl in a horizontal pattern.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    x_default : str, optional
+        The initial value for the X control.
+    y_default : str, optional
+        The initial value for the Y control.
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-----------------------------+
+        |   X: [____]        Y: [____]|
+        +-----------------------------+
     """
-    def __init__(self, parent, x_default, y_default):
+    def __init__(self, parent, x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
         self.parent = parent
         self.x_default = x_default
@@ -263,6 +288,29 @@ class XYTextCtrl(wx.Panel):
 
 class LabeledTextCtrl(wx.Panel):
     """
+    Generic labeled wx.TextCtrl.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label to display next to the ``wx.TextCtrl``.
+    default : str, optional
+        The initial value for the ``wx.TextCtrl``.
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-------------------------+
+        |label<5px><stretch>[____]|
+        +-------------------------+
     """
     def __init__(self, parent, label="", default=""):
         wx.Panel.__init__(self, parent)
@@ -299,6 +347,32 @@ class LabeledTextCtrl(wx.Panel):
 
 class LabeledXYCtrl(wx.Panel):
     """
+    A XYTextCtrl with a label to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label for the XY group.
+    x_default : str, optional
+        The initial X value
+    y_default : str, optional
+        The initial Y value
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-------------------------+
+        |label                    |
+        |   X: [____]     Y:[____]|
+        +-------------------------+
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
@@ -343,6 +417,34 @@ class LabeledXYCtrl(wx.Panel):
 
 class CheckedXYCtrl(wx.Panel):
     """
+    A XYTextCtrl with a Checkbox to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label for the checkbox.
+    x_default : str, optional
+        The initial X value
+    y_default : str, optional
+        The initial Y value
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+    checked : bool
+        Get or set the checkbox value.
+
+    Layout:
+    -------
+    ::
+
+        +--------------------------+
+        |[] label                  |
+        |   X: [____]     Y: [____]|
+        +--------------------------+
     """
     def __init__(self, parent, label="", x_default="", y_default=""):
         wx.Panel.__init__(self, parent)
@@ -397,6 +499,34 @@ class CheckedXYCtrl(wx.Panel):
 
 class CheckedTextCtrl(wx.Panel):
     """
+    A labeled TextCtrl with a Checkbox to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    check_label : str, optional
+        The label for the checkbox.
+    ctrl_label : str, optional
+        The label for the ``wx.TextCtrl``
+    default : str, optional
+        The initial value of the ``wx.TextCtrl``
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the ``wx.TextCtrl`` value
+    checked : bool
+        Get or set the checkbox value.
+
+    Layout:
+    -------
+    ::
+
+        +----------------------------+
+        |[] check_label              |
+        |    ctrl_label:       [____]|
+        +----------------------------+
     """
     def __init__(self, parent, check_label="", ctrl_label="", default=""):
         wx.Panel.__init__(self, parent)
@@ -442,6 +572,29 @@ class CheckedTextCtrl(wx.Panel):
 
 class StaticTextResult(wx.Panel):
     """
+    A labeled wx.StaticText with value getters and setters
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label to display
+    default : str, optional
+        The initial value to display
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the displayed value
+
+    Layout:
+    -------
+    ::
+
+        +----------------------------+
+        |label                  value|
+        +----------------------------+
     """
     def __init__(self, parent, label, default):
         wx.Panel.__init__(self, parent)
@@ -482,6 +635,7 @@ class StaticTextResult(wx.Panel):
 
 class StaticXYTextResult(wx.Panel):
     """
+    Not used.
     """
     def __init__(self, parent, x_default, y_default):
         wx.Panel.__init__(self, parent)
@@ -524,6 +678,7 @@ class StaticXYTextResult(wx.Panel):
 
 class ResultPanel(wx.Panel):
     """
+    The entire results panel.
     """
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
