@@ -3,8 +3,8 @@
 ## v1.7.0 - 2016-04-14
 + Massive UI refactoring.
 + Slight change in UI organization
-+ Added option to exlcude a top-side scribe exclusion.
-+ Removed all requirements on ``douglib``.
++ Added option to exclude a top-side scribe exclusion.
++ Removed all requirements on `douglib`.
 + CI updates and fixes
 + Factored out gross die per wafer calculations into separate module
 + Documentation updates.
