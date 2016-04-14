@@ -56,7 +56,7 @@ except (SystemError, ValueError):
 
 TITLE_TEXT = "GDWCalc v{}   Released {}".format(__version__,
                                                 __released__)
-INSTRUCTION_TEXT = """
+INSTRUCTION_TEXT = """\
 Keyboard Shortcuts:
 Enter\tCalculate GDW
 Home\tZoom to fit
@@ -70,6 +70,9 @@ zoom (mouse wheel) and
 pan (middle-click + drag)"""
 
 
+# ---------------------------------------------------------------------------
+### Application Classes
+# ---------------------------------------------------------------------------
 class MainApp(object):
     """ Main App Object """
     def __init__(self):
@@ -205,7 +208,575 @@ class MainFrame(wx.Frame):
         """ Call the WaferMapPanel.toggle_die_gridlines() method """
         self.panel.wafer_map.toggle_die_gridlines()
 
+        # Hack to get center lines to always be on top
+        if self.mv_gridlines.IsChecked():
+            self.panel.wafer_map.toggle_crosshairs()
+            self.panel.wafer_map.toggle_crosshairs()
 
+
+# ---------------------------------------------------------------------------
+### SubPanels
+# ---------------------------------------------------------------------------
+class XYTextCtrl(wx.Panel):
+    """
+    SubPanel for an XY input.
+
+    Contains a 25px spacer, a LabeledTextCtrl, a stretch spacer, and a
+    second LabeledTextCtrl in a horizontal pattern.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    x_default : str, optional
+        The initial value for the X control.
+    y_default : str, optional
+        The initial value for the Y control.
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-----------------------------+
+        |   X: [____]        Y: [____]|
+        +-----------------------------+
+    """
+    def __init__(self, parent, x_default="", y_default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.x_ctrl = LabeledTextCtrl(self, "X:", self.x_default)
+        self.y_ctrl = LabeledTextCtrl(self, "Y:", self.y_default)
+
+        self.hbox.AddSpacer(25)
+        self.hbox.Add(self.x_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self.y_ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def x_value(self):
+        return self.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.y_ctrl.ChangeValue(val)
+
+
+class LabeledTextCtrl(wx.Panel):
+    """
+    Generic labeled wx.TextCtrl.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label to display next to the ``wx.TextCtrl``.
+    default : str, optional
+        The initial value for the ``wx.TextCtrl``.
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-------------------------+
+        |label<5px><stretch>[____]|
+        +-------------------------+
+    """
+    def __init__(self, parent, label="", default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        # TODO: what to do if label is empty?
+        self.text = wx.StaticText(self, label=self.label)
+        self.ctrl = wx.TextCtrl(self, wx.ID_ANY, self.default, size=(50, -1))
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.hbox.Add(self.text, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.hbox.AddSpacer(5)
+        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def value(self):
+        return self.ctrl.Value
+
+    @value.setter
+    def value(self, val):
+        self.ctrl.Value = val
+
+    # Make it easier for people used to wxPython's CamelCase
+    Value = value
+
+
+class LabeledXYCtrl(wx.Panel):
+    """
+    A XYTextCtrl with a label to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label for the XY group.
+    x_default : str, optional
+        The initial X value
+    y_default : str, optional
+        The initial Y value
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+
+    Layout:
+    -------
+    ::
+
+        +-------------------------+
+        |label                    |
+        |   X: [____]     Y:[____]|
+        +-------------------------+
+    """
+    def __init__(self, parent, label="", x_default="", y_default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.text = wx.StaticText(self, label=self.label)
+
+        self.ctrls = XYTextCtrl(self, self.x_default, self.y_default)
+
+        self.vbox.Add(self.text)
+        self.vbox.Add(self.ctrls, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def x_value(self):
+        return self.ctrls.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.ctrls.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.ctrls.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.ctrls.y_ctrl.ChangeValue(val)
+
+
+class CheckedXYCtrl(wx.Panel):
+    """
+    A XYTextCtrl with a Checkbox to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label for the checkbox.
+    x_default : str, optional
+        The initial X value
+    y_default : str, optional
+        The initial Y value
+
+    Public Properties:
+    ------------------
+    x_value, y_value : str
+        Get or set the wx.TextCtrl value
+    checked : bool
+        Get or set the checkbox value.
+
+    Layout:
+    -------
+    ::
+
+        +--------------------------+
+        |[] label                  |
+        |   X: [____]     Y: [____]|
+        +--------------------------+
+    """
+    def __init__(self, parent, label="", x_default="", y_default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.chk_ctrl = wx.CheckBox(self, label=self.label)
+
+        self.ctrls = XYTextCtrl(self, self.x_default, self.y_default)
+
+        self.vbox.Add(self.chk_ctrl)
+        self.vbox.Add(self.ctrls, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def checked(self):
+        return self.chk_ctrl.IsChecked()
+
+    @checked.setter
+    def checked(self, val):
+        if val not in (True, False):
+            raise TypeError("Value must be a boolean: `True` or `False`")
+        self.chk_ctrl.SetValue(val)
+
+    @property
+    def x_value(self):
+        return self.ctrls.x_ctrl.Value
+
+    @x_value.setter
+    def x_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.ctrls.x_ctrl.ChangeValue(val)
+
+    @property
+    def y_value(self):
+        return self.ctrls.y_ctrl.Value
+
+    @y_value.setter
+    def y_value(self, val):
+        # ChangeValue does not fire wxECT_TEXT event; SetValue does.
+        self.ctrls.y_ctrl.ChangeValue(val)
+
+
+class CheckedTextCtrl(wx.Panel):
+    """
+    A labeled TextCtrl with a Checkbox to the top-left.
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    check_label : str, optional
+        The label for the checkbox.
+    ctrl_label : str, optional
+        The label for the ``wx.TextCtrl``
+    default : str, optional
+        The initial value of the ``wx.TextCtrl``
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the ``wx.TextCtrl`` value
+    checked : bool
+        Get or set the checkbox value.
+
+    Layout:
+    -------
+    ::
+
+        +----------------------------+
+        |[] check_label              |
+        |    ctrl_label:       [____]|
+        +----------------------------+
+    """
+    def __init__(self, parent, check_label="", ctrl_label="", default=""):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.check_label = check_label
+        self.ctrl_label = ctrl_label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.chk_ctrl = wx.CheckBox(self, label=self.check_label)
+
+        self.ctrl = LabeledTextCtrl(self, self.ctrl_label, self.default)
+
+        self.hbox.AddSpacer(25)
+        self.hbox.Add(self.ctrl, 1, wx.EXPAND)
+
+        self.vbox.Add(self.chk_ctrl)
+        self.vbox.Add(self.hbox, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+    @property
+    def checked(self):
+        return self.chk_ctrl.IsChecked()
+
+    @checked.setter
+    def checked(self, val):
+        self.chk_ctrl.SetValue(val)
+
+    @property
+    def value(self):
+        return self.ctrl.Value
+
+    @value.setter
+    def value(self, val):
+        self.ctrl.ChangeValue(val)
+
+
+class StaticTextResult(wx.Panel):
+    """
+    A labeled wx.StaticText with value getters and setters
+
+    Parameters:
+    -----------
+    parent : ``wx.Panel`` or ``wx.Frame`` object
+        The parent panel or frame.
+    label : str, optional
+        The label to display
+    default : str, optional
+        The initial value to display
+
+    Public Properties:
+    ------------------
+    value : str
+        Get or set the displayed value
+
+    Layout:
+    -------
+    ::
+
+        +----------------------------+
+        |label                  value|
+        +----------------------------+
+    """
+    def __init__(self, parent, label, default):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.label = label
+        self.default = default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.lbl = wx.StaticText(self, label=self.label)
+        self._value = wx.StaticText(self, label=self.default,
+                                    style=wx.ALIGN_RIGHT|wx.ST_NO_AUTORESIZE)
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.hbox.Add(self.lbl, 0)
+        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self._value, 1)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def value(self):
+        return self._value.GetLabel()
+
+    @value.setter
+    def value(self, val):
+        if isinstance(val, (float, int)):
+            val = "{:>.8g}".format(val)
+        elif isinstance(val, str):
+            pass
+        else:
+            raise TypeError("Value must be a string, int, or float")
+
+        self._value.SetLabel(val)
+
+
+class StaticXYTextResult(wx.Panel):
+    """
+    Not used.
+    """
+    def __init__(self, parent, x_default, y_default):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.x_default = x_default
+        self.y_default = y_default
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self._x_value = StaticTextResult(self, "X (col):", self.x_default)
+        self._y_value = StaticTextResult(self, "Y (row):", self.y_default)
+
+        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+#        self.hbox.AddSpacer(10)
+#        self.hbox.AddStretchSpacer()
+        self.hbox.Add(self._x_value, 0, wx.EXPAND)
+#        self.hbox.AddSpacer(10)
+        self.hbox.Add(self._y_value, 0, wx.EXPAND)
+
+        self.SetSizer(self.hbox)
+
+    @property
+    def x_value(self):
+        return self._x_value.GetLabel()
+
+    @x_value.setter
+    def x_value(self, val):
+        self._x_value.SetLabel(val)
+
+    @property
+    def y_value(self):
+        return self._y_value.GetLabel()
+
+    @y_value.setter
+    def y_value(self, val):
+        self._y_value.SetLabel(val)
+
+
+class ResultPanel(wx.Panel):
+    """
+    The entire results panel.
+    """
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.gdw_result = StaticTextResult(self,
+                                           "Gross Die per Wafer:",
+                                           "0",
+                                           )
+        self.ee_loss_result = StaticTextResult(self,
+                                               "Die lost to Edge Exclusion:",
+                                               "0",
+                                               )
+        self.flat_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Wafer Flat:",
+                                                 "0",
+                                                 )
+        self.fe_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Flat Exclusion:",
+                                                 "0",
+                                                 )
+        self.scribe_loss_result = StaticTextResult(self,
+                                                 "Die Lost to Scribe Exclusion:",
+                                                 "0",
+                                                 )
+
+        self.shape_x_result = StaticTextResult(self,
+                                               "Center X (Column) Offset:",
+                                               "0 (odd)")
+        self.shape_y_result = StaticTextResult(self,
+                                               "Center Y (Row) Offset:",
+                                               "0 (odd)")
+
+        self.center_x_result = StaticTextResult(self, "Center X Coord:", "0")
+        self.center_y_result = StaticTextResult(self, "Center Y Coord:", "0")
+
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.gdw_result, 0, wx.EXPAND)
+        self.vbox.Add(self.ee_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.flat_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.fe_loss_result, 0, wx.EXPAND)
+        self.vbox.Add(self.scribe_loss_result, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.shape_x_result, 0, wx.EXPAND)
+        self.vbox.Add(self.shape_y_result, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.center_x_result, 0, wx.EXPAND)
+        self.vbox.Add(self.center_y_result, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+
+class InputPanel(wx.Panel):
+    """ Main input panel """
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+
+        self._init_ui()
+
+    def _init_ui(self):
+        self.size_input = LabeledXYCtrl(self, "Die Size (mm):", "5", "5")
+        self.dia_input = LabeledTextCtrl(self, "Diameter (mm)", "150")
+        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "5")
+        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "5")
+        self.fo_ctrl = CheckedXYCtrl(self,
+                                     "Force Fixed Offsets? (mm):",
+                                     "0",
+                                     "0",
+                                     )
+        self.fdc_ctrl = CheckedXYCtrl(self, "Force 1st Die Coord?", "0", "0")
+        self.scribe_loc_ctrl = CheckedTextCtrl(self,
+                                               "Use the Aizu Scribe Location?",
+                                               "Y Coord (mm)",
+                                               "70.2",
+                                               )
+
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.size_input, 0, wx.EXPAND)
+        self.vbox.Add(self.dia_input, 0, wx.EXPAND)
+        self.vbox.Add(self.ee_input, 0, wx.EXPAND)
+        self.vbox.Add(self.fe_input, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.fo_ctrl, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.fdc_ctrl, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.scribe_loc_ctrl, 0, wx.EXPAND)
+
+        self.SetSizer(self.vbox)
+
+
+# ---------------------------------------------------------------------------
+### Main UI Panel
+# ---------------------------------------------------------------------------
 class MainPanel(wx.Panel):
     """ Main Panel. Contains parameters and the map """
     def __init__(self, parent):
@@ -223,45 +794,7 @@ class MainPanel(wx.Panel):
 
     def init_ui(self):
         """ Create the UI """
-
-        # Die X Size
-        self.x_lbl = wx.StaticText(self, label="X Size (mm)")
-        self.x_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
-
-        # Die Y Size
-        self.y_lbl = wx.StaticText(self, label="Y Size (mm)")
-        self.y_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
-
-        # Wafer Diameter
-        self.dia_lbl = wx.StaticText(self, label="Wafer Diameter (mm)")
-        self.dia_input = wx.TextCtrl(self, wx.ID_ANY, "150", size=(50, -1))
-
-        # Edge Exclusion
-        self.ee_lbl = wx.StaticText(self, label="Edge Exlusion (mm)")
-        self.ee_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
-
-        # Flat Exclusion
-        self.fe_lbl = wx.StaticText(self, label="Flat Exclusion (mm)")
-        self.fe_input = wx.TextCtrl(self, wx.ID_ANY, "5", size=(50, -1))
-
-        # Fixed Offsets
-        self.fo_chk = wx.CheckBox(self, label="Fixed Offsets")
-        self.x_fo_lbl = wx.StaticText(self, label="X Offset (mm)")
-        self.x_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fo_lbl = wx.StaticText(self, label="Y Offset (mm)")
-        self.y_fo_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-
-        # Force First Die Coord
-        self.fdc_chk = wx.CheckBox(self, label="Force 1st Die Coord")
-        self.x_fdc_lbl = wx.StaticText(self, label="X (Column) Coord")
-        self.x_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-        self.y_fdc_lbl = wx.StaticText(self, label="Y (Row) Coord")
-        self.y_fdc_input = wx.TextCtrl(self, wx.ID_ANY, "0", size=(50, -1))
-
-        # Scribe Location value
-        self.scribe_loc_chk = wx.CheckBox(self, label="Use the Aizu Scribe Location")
-        self.scribe_loc_lbl = wx.StaticText(self, label="Scribe Y Coord (mm)")
-        self.scribe_loc_input = wx.TextCtrl(self, wx.ID_ANY, "70.2", size=(50, -1))
+        self.input_panel = InputPanel(self)
 
         # Calculate Button
         self.calc_button = wx.Button(self, label="Calculate")
@@ -312,38 +845,7 @@ class MainPanel(wx.Panel):
         self.histograms = RadiusPlots(self, radius_data)
 
         # Result Info
-        self.gdw_lbl = wx.StaticText(self, label="Gross Die per Wafer:")
-        self.gdw_result = wx.StaticText(self, label="0")
-
-        self.ee_loss_lbl = wx.StaticText(self,
-                                         label="Die lost to Edge Exclusion:")
-
-        self.ee_loss_result = wx.StaticText(self, label="0")
-
-        self.flat_loss_lbl = wx.StaticText(self,
-                                           label="Die Lost to Wafer Flat:")
-        self.flat_loss_result = wx.StaticText(self, label="0")
-
-        self.fe_loss_lbl = wx.StaticText(self,
-                                         label="Die Lost to Flat Exclusion:")
-        self.fe_loss_result = wx.StaticText(self, label="0")
-
-        self.scribe_loss_lbl = wx.StaticText(self,
-                                             label="Die Lost to Scribe Exclusion:")
-        self.scribe_loss_result = wx.StaticText(self, label="0")
-
-        # Center Info
-        self.shape_lbl = wx.StaticText(self, label="Center Offsets:")
-        self.shape_x_label = wx.StaticText(self, label="X (Column):")
-        self.shape_x_result = wx.StaticText(self, label="0 (odd)")
-        self.shape_y_lbl = wx.StaticText(self, label="Y (Row):")
-        self.shape_y_result = wx.StaticText(self, label="0 (odd)")
-
-        self.center_lbl = wx.StaticText(self, label="Center Coords:")
-        self.center_x_lbl = wx.StaticText(self, label="X (Column):")
-        self.center_x_result = wx.StaticText(self, label="0")
-        self.center_y_lbl = wx.StaticText(self, label="Y (Row):")
-        self.center_y_result = wx.StaticText(self, label="0")
+        self.results = ResultPanel(self)
 
         # Instructions:
         self.instructions = wx.StaticText(self, label=INSTRUCTION_TEXT)
@@ -352,54 +854,21 @@ class MainPanel(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.fgs_inputs = wx.FlexGridSizer(rows=16, cols=2, vgap=0, hgap=0)
-        self.fgs_inputs.AddMany([
-                                 self.x_lbl, self.x_input,
-                                 self.y_lbl, self.y_input,
-                                 self.dia_lbl, self.dia_input,
-                                 self.ee_lbl, self.ee_input,
-                                 self.fe_lbl, self.fe_input,
-                                 (-1, 10), (-1, -1),
-                                 self.fo_chk, (-1, -1),
-                                 self.x_fo_lbl, self.x_fo_input,
-                                 self.y_fo_lbl, self.y_fo_input,
-                                 (-1, 10), (-1, -1),
-                                 self.fdc_chk, (-1, -1),
-                                 self.x_fdc_lbl, self.x_fdc_input,
-                                 self.y_fdc_lbl, self.y_fdc_input,
-                                 (-1, 10), (-1, -1),
-                                 self.scribe_loc_chk, (-1, -1),
-                                 self.scribe_loc_lbl, self.scribe_loc_input,
-                                 ])
-
-        self.fgs_results = wx.FlexGridSizer(rows=14, cols=2, vgap=0, hgap=10)
-
-        # Add items to the results layout
-        self.fgs_results.AddMany([self.gdw_lbl, self.gdw_result,
-                                  (-1, 10), (-1, 10),
-                                  self.ee_loss_lbl, self.ee_loss_result,
-                                  self.flat_loss_lbl, self.flat_loss_result,
-                                  self.fe_loss_lbl, self.fe_loss_result,
-                                  self.scribe_loss_lbl, self.scribe_loss_result,
-                                  (-1, 10), (-1, 10),
-                                  self.shape_lbl, (-1, -1),
-                                  self.shape_x_label, self.shape_x_result,
-                                  self.shape_y_lbl, self.shape_y_result,
-                                  (-1, 10), (-1, 10),
-                                  self.center_lbl, (-1, -1),
-                                  self.center_x_lbl, self.center_x_result,
-                                  self.center_y_lbl, self.center_y_result,
-                                  ])
-        self.vbox.Add(self.fgs_inputs, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        # Add items to the vertical side-bar box.
+        self.vbox.Add(self.input_panel, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.calc_button, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.gen_mask_button, 0, wx.EXPAND)
-        self.vbox.Add((-1, 10), 0, wx.EXPAND)
-        self.vbox.Add(self.fgs_results, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
+        self.vbox.Add(self.results, 0, wx.EXPAND)
+        self.vbox.AddSpacer(10)
         self.vbox.Add(self.instructions, 0, wx.EXPAND)
+
+        # Add items to the main horizontal box sizer.
+        self.hbox.AddSpacer(2)
         self.hbox.Add(self.vbox, 0, wx.EXPAND)
-        self.hbox.Add((20, -1), 0, wx.EXPAND)
+        self.hbox.AddSpacer(20)
         self.hbox.Add(self.wafer_map, 2, wx.EXPAND)
         self.hbox.Add(self.histograms, 1, wx.EXPAND)
 
@@ -409,20 +878,20 @@ class MainPanel(wx.Panel):
         """ Performs the GDW Calculation on button click """
         print("Button Pressed")
 
-        self.die_x = float(self.x_input.Value)
-        self.die_y = float(self.y_input.Value)
+        self.die_x = float(self.input_panel.size_input.x_value)
+        self.die_y = float(self.input_panel.size_input.y_value)
         self.die_xy = (self.die_x, self.die_y)
-        self.dia = int(self.dia_input.Value)
-        self.ee = float(self.ee_input.Value)
-        self.fe = float(self.fe_input.Value)
-        self.fo_bool = bool(self.fo_chk.Value)
-        self.x_fo = float(self.x_fo_input.Value)
-        self.y_fo = float(self.y_fo_input.Value)
+        self.dia = int(self.input_panel.dia_input.Value)
+        self.ee = float(self.input_panel.ee_input.Value)
+        self.fe = float(self.input_panel.fe_input.Value)
+        self.fo_bool = bool(self.input_panel.fo_ctrl.checked)
+        self.x_fo = float(self.input_panel.fo_ctrl.x_value)
+        self.y_fo = float(self.input_panel.fo_ctrl.y_value)
         self.fo = (self.x_fo, self.y_fo)
         self.grid_offset = (0, 0)
-        self.north_limit = float(self.scribe_loc_input.Value)
+        self.north_limit = float(self.input_panel.scribe_loc_ctrl.value)
 
-        if not self.scribe_loc_chk.IsChecked():
+        if not self.input_panel.scribe_loc_ctrl.checked:
             self.north_limit = None
 
         # If using fixed offsets, call other function.
@@ -445,15 +914,15 @@ class MainPanel(wx.Panel):
         self.coord_list = [(i[0], i[1], i[4]) for i in probe_list]
 
         # If using a forced starting die (top-left), adjust coords
-        if self.fdc_chk.Value:
+        if self.input_panel.fdc_ctrl.checked:
             # Gind the topmost then leftmost probed die.
             min_y = min({c[1] for c in self.coord_list if c[2] == "probe"})
             min_x = min([c[0] for c in self.coord_list
                          if c[2] == "probe" and c[1] == min_y])
 
             # Calculate the delta
-            delta_x = min_x - int(self.x_fdc_input.Value)
-            delta_y = min_y - int(self.y_fdc_input.Value)
+            delta_x = min_x - int(self.input_panel.fdc_ctrl.x_value)
+            delta_y = min_y - int(self.input_panel.fdc_ctrl.y_value)
 
             self.grid_offset = (delta_x, delta_y)
 
@@ -516,28 +985,28 @@ class MainPanel(wx.Panel):
         new_radius_data = list(math.sqrt(item) for item in radius_sqrd_data)
         self.histograms.update(new_radius_data)
 
-        self.gdw_result.SetLabel(str(self.gdw))
-        self.ee_loss_result.SetLabel(str(self.ee_loss))
-        self.flat_loss_result.SetLabel(str(self.flat_loss))
-        self.fe_loss_result.SetLabel(str(self.fe_loss))
-        self.scribe_loss_result.SetLabel(str(self.scribe_loss))
+        self.results.gdw_result.value = self.gdw
+        self.results.ee_loss_result.value = self.ee_loss
+        self.results.flat_loss_result.value = self.flat_loss
+        self.results.fe_loss_result.value = self.fe_loss
+        self.results.scribe_loss_result.value = self.scribe_loss
 
         self.x_offset = self.center_xy[0] % 1
         if self.x_offset == 0:
             self.x_offset = "0 (odd)".format(self.x_offset)
         else:
             self.x_offset = "0.5 (even)".format(self.x_offset)
-        self.shape_x_result.SetLabel(str(self.x_offset))
+        self.results.shape_x_result.value = self.x_offset
 
         self.y_offset = self.center_xy[1] % 1
         if self.y_offset == 0:
             self.y_offset = "0 (odd)".format(self.y_offset)
         else:
             self.y_offset = "0.5 (even)".format(self.y_offset)
-        self.shape_y_result.SetLabel(str(self.y_offset))
+        self.results.shape_y_result.value = self.y_offset
 
-        self.center_x_result.SetLabel(str(self.center_xy[0]))
-        self.center_y_result.SetLabel(str(self.center_xy[1]))
+        self.results.center_x_result.value = self.center_xy[0]
+        self.results.center_y_result.value = self.center_xy[1]
 
         # Update the screen
         self.Refresh()
@@ -550,7 +1019,7 @@ class MainPanel(wx.Panel):
 
         try:
             gdw.gen_mask_file(self.coord_list, mask,
-                              self.die_xy, self.dia, self.fdc_chk.Value)
+                              self.die_xy, self.dia, self.fdc_ctrl.checked)
         except Exception as err:
             print(err)
             statusbar.SetStatusText("Error: {}".format(err))
@@ -558,6 +1027,9 @@ class MainPanel(wx.Panel):
         statusbar.SetStatusText("Mask saved to '{}'".format(mask))
 
 
+# ---------------------------------------------------------------------------
+### Plotting Panels
+# ---------------------------------------------------------------------------
 class RadiusPlots(wx.Panel):
     """ A container for the two radius histograms """
     def __init__(self, parent, radius_data):
