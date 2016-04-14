@@ -754,7 +754,7 @@ class InputPanel(wx.Panel):
                                      )
         self.fdc_ctrl = CheckedXYCtrl(self, "Force 1st Die Coord?", "0", "0")
         self.scribe_loc_ctrl = CheckedTextCtrl(self,
-                                               "Use the Aizu Scribe Location?",
+                                               "Use Top-Side Exclusion?",
                                                "Y Coord (mm)",
                                                "70.2",
                                                )
