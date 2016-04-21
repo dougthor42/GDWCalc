@@ -745,8 +745,8 @@ class InputPanel(wx.Panel):
     def _init_ui(self):
         self.size_input = LabeledXYCtrl(self, "Die Size (mm):", "5", "5")
         self.dia_input = LabeledTextCtrl(self, "Diameter (mm)", "150")
-        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "5")
-        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "5")
+        self.ee_input = LabeledTextCtrl(self, "Edge Exclusion (mm)", "4.5")
+        self.fe_input = LabeledTextCtrl(self, "Flat Exclusion (mm)", "4.5")
         self.fo_ctrl = CheckedXYCtrl(self,
                                      "Force Fixed Offsets? (mm):",
                                      "0",
@@ -1019,7 +1019,8 @@ class MainPanel(wx.Panel):
 
         try:
             gdw.gen_mask_file(self.coord_list, mask,
-                              self.die_xy, self.dia, self.fdc_ctrl.checked)
+                              self.die_xy, self.dia,
+                              self.input_panel.fdc_ctrl.checked)
         except Exception as err:
             print(err)
             statusbar.SetStatusText("Error: {}".format(err))

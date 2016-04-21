@@ -1,5 +1,10 @@
 # Changelog:
 
+## v1.7.1 - 2016-04-21
++ Fixed issue where mask file generation would not work.
+  [GL #4](http://gitlab.tph.local/dthor/GDWCalc/issues/4)
++ Edge and Flat exclusion now defaults to 4.5mm
+
 ## v1.7.0 - 2016-04-14
 + Massive UI refactoring.
 + Slight change in UI organization
