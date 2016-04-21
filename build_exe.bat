@@ -19,6 +19,7 @@ for /r %%x in (.\build\exe.win-amd64-3.4\*) do set /a size+=%%~zx
 set /a mb = %size% / 1000000
 echo %size% Bytes
 echo %mb% MB
+goto :end
 
 :build_error
 echo !!!----- Build Failed -----!!!
@@ -27,3 +28,6 @@ exit /b %ERRORLEVEL%
 :exe_error
 echo !!!----- Executable Failed -----!!!
 exit /b %ERRORLEVEL%
+
+:end
+echo ----- Success! -----
