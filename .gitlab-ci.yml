@@ -29,6 +29,7 @@ pip-install:
     - pip install green --no-cache-dir
     - pip install colour --no-cache-dir
     - pip install numpy --no-cache-dir
+    - pip install wheel --no-cache-dir
 #    - pip install hypothesis
 
 tests:
@@ -38,7 +39,7 @@ tests:
     - python
   script:
     - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    - python -m green -vvv -s 1 -W gdwcalc
+    - python -m green -vvv -s 1 -W -t gdwcalc
 
 tag_bundle:
   stage: tag_deploy
@@ -51,7 +52,7 @@ tag_bundle:
     - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python -m pip install --upgrade --no-cache-dir cx_freeze==4.3.4
     - python build_exe.py build
-    - python setup.py sdist bdist_wheel
+    - python setup.py bdist_wheel
   artifacts:
     paths:
       - build/exe.win-amd64-3.4/
