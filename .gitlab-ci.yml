@@ -6,11 +6,18 @@ stages:
 
 variables:
   VENV_ROOT: C:\temp\builds
+  VENV_PY34: C:\temp\builds\python34_x64
 
 # Set environment vars
 before_script:
+  - REM ==================== Before Script ====================
+  - echo %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
   - call C:\WinPython34\scripts\env.bat
   - python -c "import sys;print(sys.version)"
+
+  # Clear pip cache because it sometimes causes issues.
+  - rd /S /Q C:\Users\tph-buildbot\AppData\Local\pip\Cache
+  - REM ~~~~~~~~~~~~~~~~~~~~ End Before Script ~~~~~~~~~~~~~~~~~~~~
 
 pip-install:
   stage: init
@@ -18,9 +25,9 @@ pip-install:
   tags:
     - python
   script:
-    - echo Creating venv at `%VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%`
-    - python -m venv --clear %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
-    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - REM ==================== pip-install ====================
+    - python -m venv --clear %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
     - python -m pip install pip==8.1.0 --no-cache-dir
@@ -38,7 +45,8 @@ tests:
   tags:
     - python
   script:
-    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - REM ==================== tests ====================
+    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python -m green -vvv -s 1 -W -t gdwcalc
 
 tag_bundle:
@@ -49,7 +57,8 @@ tag_bundle:
   only:
     - tags
   script:
-    - call %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - REM ==================== build-exe ====================
+    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     - python -m pip install --upgrade --no-cache-dir cx_freeze==4.3.4
     - python build_exe.py build
     - python setup.py bdist_wheel
@@ -64,4 +73,5 @@ clean-up:
   tags:
     - python
   script:
-    - rd /S /Q %VENV_ROOT%\python34_x64\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - REM ==================== clean-up ====================
+    - rd /S /Q %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%

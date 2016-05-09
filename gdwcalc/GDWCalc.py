@@ -915,7 +915,7 @@ class MainPanel(wx.Panel):
 
         # If using a forced starting die (top-left), adjust coords
         if self.input_panel.fdc_ctrl.checked:
-            # Gind the topmost then leftmost probed die.
+            # Find the topmost then leftmost probed die.
             min_y = min({c[1] for c in self.coord_list if c[2] == "probe"})
             min_x = min([c[0] for c in self.coord_list
                          if c[2] == "probe" and c[1] == min_y])
