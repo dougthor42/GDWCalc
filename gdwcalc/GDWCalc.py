@@ -29,24 +29,22 @@ import wafer_map.wm_info as wm_info
 import wafer_map.wm_legend as wm_legend
 import wx
 import wx.lib.plot as wxplot
+from gdw import gdw
 
 # Package / Application
 try:
     # Imports used for unittests
-    from . import gdw
     from . import (__version__,
                    __released__,
                    )
 except (SystemError, ValueError):
     try:
         # Imports used by Spyder
-        import gdw
         from __init__ import (__version__,
                               __released__,
                               )
     except ImportError:
          # Imports used by cx_freeze
-        from gdwcalc import gdw
         from gdwcalc import (__version__,
                              __released__,
                              )
