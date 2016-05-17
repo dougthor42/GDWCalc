@@ -1,0 +1,5 @@
+numpy
+wafer_map
+gdw
+wxPython_Phoenix
+colour
