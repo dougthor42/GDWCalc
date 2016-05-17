@@ -30,14 +30,9 @@ pip-install:
     - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
-    - python -m pip install pip==8.1.0 --no-cache-dir
-    - pip install wafer_map --no-cache-dir
-    - pip install build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
-    - pip install green --no-cache-dir
-    - pip install colour --no-cache-dir
-    - pip install numpy --no-cache-dir
-    - pip install wheel --no-cache-dir
-#    - pip install hypothesis
+    - python -m pip install --upgrade --no-cache-dir pip
+    - python -m pip install --no-cache-dir wheel
+    - python -m pip install --no-cache-dir -r requirements.txt
 
 tests:
   stage: test
@@ -47,6 +42,7 @@ tests:
   script:
     - REM ==================== tests ====================
     - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - python -m pip install --no-cache-dir -r dev-requirements.txt
     - python -m green -vvv -s 1 -W -t gdwcalc
 
 tag_bundle:
@@ -59,7 +55,6 @@ tag_bundle:
   script:
     - REM ==================== build-exe ====================
     - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
-    - python -m pip install --upgrade --no-cache-dir cx_freeze==4.3.4
     - python build_exe.py build
     - python setup.py bdist_wheel
   artifacts:

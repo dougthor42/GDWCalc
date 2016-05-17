@@ -59,7 +59,7 @@ include_files = []
 # stripped prior to performing the comparison
 bin_includes = []
 
-# list of names of moduels to exclude
+# list of names of modules to exclude
 excludes = [
             "tkinter",
             "ssl",

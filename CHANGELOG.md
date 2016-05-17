@@ -1,5 +1,9 @@
 # Changelog:
 
+## v1.7.2 - TBD
++ Moved `gdw` to separate package
++ Fixed typos
+
 ## v1.7.1 - 2016-04-21
 + Fixed issue where mask file generation would not work.
   [GL #4](http://gitlab.tph.local/dthor/GDWCalc/issues/4)
