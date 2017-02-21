@@ -1,2 +1,2 @@
 green
-cx_freeze==4.3.4
+cx_freeze

@@ -1,35 +1,40 @@
 stages:
   - init
   - test
-  - tag_deploy
+  - build
+  - deploy
   - cleanup
 
 variables:
   VENV_ROOT: C:\temp\builds
-  VENV_PY34: C:\temp\builds\python34_x64
+  VENV_PY35: C:\temp\builds\python35_x64
   WXPYTHON_SNAPSHOTS: https://wxpython.org/Phoenix/snapshot-builds
   PYPI_URL: http://tphweb.tph.local/pypi
 
 # Set environment vars
 before_script:
   - REM ==================== Before Script ====================
-  - echo %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
-  - call C:\WinPython34\scripts\env.bat
+  # Create the build dir environment variable.
+  - set BUILD_DIR=%VENV_PY35%\%CI_PROJECT_ID%
+  - set BUILD_DIR=%BUILD_DIR%__%CI_PROJECT_NAMESPACE%
+  - set BUILD_DIR=%BUILD_DIR%__%CI_PROJECT_NAME%
+  - set BUILD_DIR=%BUILD_DIR%__%CI_PIPELINE_ID%
+  - set BUILD_DIR=%BUILD_DIR%__%CI_BUILD_REF_NAME%
+  - echo %BUILD_DIR%
+
+  - call C:\WinPython35\scripts\env.bat
   - python -c "import sys;print(sys.version)"
 
-  # Clear pip cache because it sometimes causes issues.
-  - rd /S /Q C:\Users\tph-buildbot\AppData\Local\pip\Cache
   - REM ~~~~~~~~~~~~~~~~~~~~ End Before Script ~~~~~~~~~~~~~~~~~~~~
 
-pip-install:
+install:
   stage: init
   when: always
   tags:
     - python
   script:
-    - REM ==================== pip-install ====================
-    - python -m venv --clear %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
-    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - python -m venv --clear %BUILD_DIR%
+    - call %BUILD_DIR%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
     - python -m pip install --upgrade --no-cache-dir pip
@@ -37,33 +42,51 @@ pip-install:
     - "python -m pip install --only-binary :all: --pre -f %WXPYTHON_SNAPSHOTS% wxPython_Phoenix"
     - python -m pip install --no-cache-dir -r requirements.txt
 
-tests:
+test:
   stage: test
   when: on_success
   tags:
     - python
   script:
-    - REM ==================== tests ====================
-    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %BUILD_DIR%\Scripts\activate.bat
     - python -m pip install --no-cache-dir -r dev-requirements.txt
     - python -m green -vvv -s 1 -W -t gdwcalc
 
-tag_bundle:
-  stage: tag_deploy
+build:
+  stage: build
   when: on_success
   tags:
     - python
   only:
     - tags
   script:
-    - REM ==================== build-exe ====================
-    - call %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%\Scripts\activate.bat
+    - call %BUILD_DIR%\Scripts\activate.bat
     - python build_exe.py build
-    - python setup.py bdist_wheel
+    - python setup.py sdist bdist_wheel
   artifacts:
     paths:
-      - build/exe.win-amd64-3.4/
-      - dist/*.whl
+      - build/exe.win-amd64-3.5/
+      - dist/*
+
+deploy:
+  stage: deploy
+  environment:
+    name: production
+    url: $PYPI_URL/simple/gdwcalc
+  when: on_success
+  tags:
+    - python
+  only:
+    - tags
+  script:
+    - call C:\WinPython35\scripts\env.bat
+    - call %BUILD_DIR%\Scripts\activate.bat
+    - python -m pip install --upgrade twine
+    - dir dist\*.tar.gz /b/s > temp.txt
+    - set /p VAR=<temp.txt
+    - echo %VAR%
+    - twine register --repository %PYPI_URL% --repository-url %PYPI_URL% -u '' -p '' %VAR%
+    - twine upload --repository %PYPI_URL% --repository-url %PYPI_URL% -u '' -p '' dist/*
 
 clean-up:
   stage: cleanup
@@ -71,5 +94,4 @@ clean-up:
   tags:
     - python
   script:
-    - REM ==================== clean-up ====================
-    - rd /S /Q %VENV_PY34%\%CI_PROJECT_ID%__%CI_BUILD_REF_NAME%
+    - rd /S /Q %BUILD_DIR%
