@@ -1,5 +1,8 @@
 # Changelog:
 
+## v1.7.6 (2017-02-20)
++ Another CI fix.
+
 ## v1.7.5 (2017-02-20)
 + Fix for CI bug in 1.7.3.
 + Also mis-tagged previous release as 1.7.4.
