@@ -1,5 +1,8 @@
 # Changelog:
 
+## v1.7.3 (2017-02-20)
++ Updated CI.
+
 ## v1.7.2 - TBD
 + Moved `gdw` to separate package
 + Fixed typos
