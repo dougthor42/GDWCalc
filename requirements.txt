@@ -1,5 +1,7 @@
-https://gitlab.com/dougthor42/wheels/raw/master/numpy-1.11.0+mkl-cp34-cp34m-win_amd64.whl
-wafer_map
 colour
-build-reqs/wxPython_Phoenix-3.0.3.dev1956-cp34-cp34m-win_amd64.whl
-https://gitlab.com/dougthor42/wheels/raw/master/gdw-0.1.0-py3-none-any.whl
+numpy
+
+--trusted-host tphweb.tph.local
+--index-url http://tphweb.tph.local/pypi
+wafer_map
+gdw
