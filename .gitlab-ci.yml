@@ -61,11 +61,11 @@ build:
     - tags
   script:
     - call %BUILD_DIR%\Scripts\activate.bat
-    - python build_exe.py build
+#    - python build_exe.py build
     - python setup.py sdist bdist_wheel
   artifacts:
     paths:
-      - build/exe.win-amd64-3.5/
+#      - build/exe.win-amd64-3.5/
       - dist/*
 
 deploy:
