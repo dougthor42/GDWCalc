@@ -19,7 +19,7 @@ before_script:
   - set BUILD_DIR=%BUILD_DIR%__%CI_PROJECT_NAMESPACE%
   - set BUILD_DIR=%BUILD_DIR%__%CI_PROJECT_NAME%
   - set BUILD_DIR=%BUILD_DIR%__%CI_PIPELINE_ID%
-  - set BUILD_DIR=%BUILD_DIR%__%CI_BUILD_REF_NAME%
+  - set BUILD_DIR=%BUILD_DIR%__%CI_COMMIT_REF_NAME%
   - echo %BUILD_DIR%
 
   - call C:\WinPython35\scripts\env.bat
