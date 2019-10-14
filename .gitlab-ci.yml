@@ -30,7 +30,7 @@ install:
   stage: init
   when: always
   tags:
-    - python
+    - python-windows
   script:
     - python -m venv --clear %BUILD_DIR%
     - call %BUILD_DIR%\Scripts\activate.bat
@@ -43,7 +43,7 @@ test:
   stage: test
   when: on_success
   tags:
-    - python
+    - python-windows
   script:
     - call %BUILD_DIR%\Scripts\activate.bat
     - python -m pip install --no-cache-dir -r dev-requirements.txt
@@ -53,7 +53,7 @@ build:
   stage: build
   when: on_success
   tags:
-    - python
+    - python-windows
   only:
     - tags
   script:
@@ -72,7 +72,7 @@ deploy:
     url: $PYPI_URL/simple/gdwcalc
   when: on_success
   tags:
-    - python
+    - python-windows
   only:
     - tags
   script:
@@ -89,6 +89,6 @@ clean-up:
   stage: cleanup
   when: always
   tags:
-    - python
+    - python-windows
   script:
     - rd /S /Q %BUILD_DIR%
