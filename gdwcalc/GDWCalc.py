@@ -32,22 +32,8 @@ import wx.lib.plot as wxplot
 from gdw import gdw
 
 # Package / Application
-try:
-    # Imports used for unittests
-    from . import (__version__,
-                   __released__,
-                   )
-except (SystemError, ValueError):
-    try:
-        # Imports used by Spyder
-        from __init__ import (__version__,
-                              __released__,
-                              )
-    except ImportError:
-         # Imports used by cx_freeze
-        from gdwcalc import (__version__,
-                             __released__,
-                             )
+from gdwcalc import __version__
+from gdwcalc import __released__
 
 
 # TODO: Recode maxGDW to to include 'print' statements?
