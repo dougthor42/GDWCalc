@@ -1,5 +1,9 @@
 # Changelog:
 
+## Unreleased
++ Fixed CI builds by pinning versions and removing wxPython snapshot thing. (!8)
+
+
 ## v1.7.6 (2017-02-20)
 + Another CI fix.
 
