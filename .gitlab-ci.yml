@@ -8,7 +8,6 @@ stages:
 variables:
   VENV_ROOT: C:\temp\builds
   VENV_PY35: C:\temp\builds\python35_x64
-  WXPYTHON_SNAPSHOTS: https://wxpython.org/Phoenix/snapshot-builds
   PYPI_URL: http://tphweb.tph.local/pypi
 
 # Set environment vars
@@ -37,10 +36,8 @@ install:
     - call %BUILD_DIR%\Scripts\activate.bat
     # Can't upgrade pip in place.
     # See https://github.com/pypa/pip/issues/1299#issuecomment-188198496
-    - python -m pip install --upgrade --no-cache-dir pip
-    - python -m pip install --no-cache-dir wheel
-    - "python -m pip install --only-binary :all: --pre -f %WXPYTHON_SNAPSHOTS% wxPython_Phoenix"
-    - python -m pip install --no-cache-dir -r requirements.txt
+    - python -m pip install --upgrade pip setuptools wheel
+    - python -m pip install -r requirements.txt
 
 test:
   stage: test
