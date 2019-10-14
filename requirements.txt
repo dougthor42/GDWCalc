@@ -1,5 +1,6 @@
-colour
-numpy
+colour == 0.1.5
+numpy == 1.17.2
+wxpython == 4.0.6
 
 --trusted-host tphweb.tph.local
 --index-url http://tphweb.tph.local/pypi
