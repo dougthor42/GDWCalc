@@ -32,22 +32,8 @@ import wx.lib.plot as wxplot
 from gdw import gdw
 
 # Package / Application
-try:
-    # Imports used for unittests
-    from . import (__version__,
-                   __released__,
-                   )
-except (SystemError, ValueError):
-    try:
-        # Imports used by Spyder
-        from __init__ import (__version__,
-                              __released__,
-                              )
-    except ImportError:
-         # Imports used by cx_freeze
-        from gdwcalc import (__version__,
-                             __released__,
-                             )
+from gdwcalc import __version__
+from gdwcalc import __released__
 
 
 # TODO: Recode maxGDW to to include 'print' statements?
@@ -61,6 +47,7 @@ Home\tZoom to fit
 C\tToggle centerlines
 O\tToggle wafer outline
 G\tToggle die grid lines
+D\tToggle die centers
 CTRL+Q\tExit
 
 Click on wafer map to
@@ -155,6 +142,12 @@ class MainFrame(wx.Frame):
                                         "Show or hide the die grid lines",
                                         wx.ITEM_CHECK,
                                         )
+        self.mv_diecenters = wx.MenuItem(self.mview,
+                                         wx.ID_ANY,
+                                         "Die Centers\tD",
+                                         "Show or hide the die centers",
+                                         wx.ITEM_CHECK,
+                                         )
 
     def _add_menu_items(self):
         """ Appends MenuItems to each menu """
@@ -165,6 +158,7 @@ class MainFrame(wx.Frame):
         self.mview.Append(self.mv_crosshairs)
         self.mview.Append(self.mv_outline)
         self.mview.Append(self.mv_gridlines)
+        self.mview.Append(self.mv_diecenters)
 
     def _add_menus(self):
         """ Appends each menu to the menu bar """
@@ -180,6 +174,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.toggle_crosshairs, self.mv_crosshairs)
         self.Bind(wx.EVT_MENU, self.toggle_outline, self.mv_outline)
         self.Bind(wx.EVT_MENU, self.toggle_gridlines, self.mv_gridlines)
+        self.Bind(wx.EVT_MENU, self.toggle_diecenters, self.mv_diecenters)
 
     def on_quit(self, event):
         """ Actions for the quit event """
@@ -210,6 +205,9 @@ class MainFrame(wx.Frame):
         if self.mv_gridlines.IsChecked():
             self.panel.wafer_map.toggle_crosshairs()
             self.panel.wafer_map.toggle_crosshairs()
+
+    def toggle_diecenters(self, event):
+        self.panel.wafer_map.toggle_die_centers()
 
 
 # ---------------------------------------------------------------------------
@@ -971,7 +969,7 @@ class MainPanel(wx.Panel):
         self.wafer_map.xyd_dict = wm_core.xyd_to_dict(self.coord_list)
         self.wafer_map._create_legend()
         self.wafer_map.draw_die()
-        self.wafer_map.draw_die_center()
+        self.wafer_map.die_centers = self.wafer_map.draw_die_center()
         self.wafer_map.draw_wafer_objects()
         self.wafer_map.zoom_fill()
 
