@@ -1,6 +1,10 @@
 # Changelog:
 
+
 ## Unreleased
+
+
+## v1.7.7b1
 + Fixed CI builds by pinning versions and removing wxPython snapshot thing. (!8)
 + Update the `build_exe` batch file to use python36 for builds. This is pretty
   minor, as CI is where the true exes are built and that uses 35. (!7)
