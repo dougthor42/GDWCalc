@@ -1,5 +1,5 @@
 colour == 0.1.5
-numpy == 1.17.2
+numpy == 1.22.0
 wxpython == 4.0.6
 
 --trusted-host tphweb.tph.local
